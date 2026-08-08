@@ -1,0 +1,336 @@
+/* Encabezado fijo propio de esta pantalla — breadcrumb en vez de VolverLink + avatar
+   (rediseño 008-rediseno-visual-sistema). La sidebar en esta ruta siempre está forzada a
+   colapsada (Sidebar.tsx, pathname.startsWith("/citas/")), así que el offset es fijo en
+   64px — a diferencia de TopAppBar (§6.20), no necesita leer useSidebarColapsada(). Mismo
+   lenguaje visual (glassmorphism, 64px de alto) que TopAppBar para que se sienta parte del
+   mismo sistema aunque el contenido sea distinto. */
+/* Fija siempre a todo el ancho — a diferencia de .pagina, NO se achica cuando el panel de
+   Historial abre (revisión posterior: probamos que también se achicara en paralelo, pero
+   eso dejaba una franja de fondo suelta arriba, sin cubrir, entre el botón "Finalizar
+   atención" y el panel — la odontóloga pidió volver la topbar fija ocupando ese espacio). El
+   panel arranca en `top:64px`, debajo de esta barra, así que nunca se superponen. */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 64px;
+  right: 0;
+  height: 64px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 0 var(--space-6);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar {
+    transition: none;
+  }
+}
+
+.migas {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.migaLink {
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.migaLink:hover {
+  color: var(--color-primary);
+}
+
+.migas svg {
+  flex-shrink: 0;
+  color: var(--color-muted-foreground);
+}
+
+.migaActual {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accionesTopbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.iconoTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconoTopbar:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-primary);
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  margin-top: 64px; /* espacio para .topbar, fija */
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+  /* Mismo timing que el colapso de la Sidebar — el panel de Historial empuja el contenido
+     en vez de flotar encima. */
+  transition: margin-right 200ms ease-in-out;
+}
+
+.paginaConPanel {
+  margin-right: 360px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pagina {
+    transition: none;
+  }
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5) var(--space-6);
+  flex-wrap: wrap;
+}
+
+.heroIdentidad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* Resumen de historia clínica al lado del nombre — antes era espacio vacío. Una fila por
+   categoría (§6.2.1); las filas vacías no ocupan lugar (ListaEtiquetas devuelve null). */
+.heroHistoriaClinica {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 240px;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--color-border);
+}
+
+@media (max-width: 767px) {
+  .heroHistoriaClinica {
+    padding-left: 0;
+    border-left: none;
+    width: 100%;
+  }
+}
+
+/* Cada fila identifica su categoría — sin esto, un color amarillo suelto no dice si es un
+   medicamento o una alergia. Label fijo a la izquierda, angosto pero no lo bastante para
+   truncar "Ant. heredofamiliares" (la fila más larga); las etiquetas fluyen a la derecha. */
+.filaHistoriaClinica {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.filaHistoriaClinicaLabel {
+  flex-shrink: 0;
+  width: 140px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1023px) {
+  .filaHistoriaClinica {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .filaHistoriaClinicaLabel {
+    width: auto;
+  }
+}
+
+.subtitulo {
+  color: var(--color-muted-foreground);
+}
+
+.principal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.contenidoTab {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-8);
+}
+
+/* Pestaña fija al borde derecho — abre Antecedentes e Historial (Drawer). Reemplaza el
+   botón que antes vivía en el encabezado, a pedido de la odontóloga. */
+.pestanaLateral {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.pestanaLateral:hover {
+  background: var(--color-muted);
+}
+
+.pestanaLateral:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+
+.pestanaLateralTexto {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Panel fijo de Antecedentes e Historial — NO es un modal: sin overlay que oscurezca el
+   resto de la pantalla, no se cierra solo al hacer clic afuera ni al cambiar de pestaña
+   (Diagnóstico/Receta/Estudios). Ancho acotado (compacto, no ocupa media pantalla) y
+   empuja el contenido (.topbar/.pagina) en vez de flotar encima — mismo comportamiento y
+   timing que el colapso de la Sidebar izquierda, a pedido de la odontóloga ("probemos si se
+   siente mejor así que sobrepuesto"). Siempre montado, oculto con `translateX` — así el
+   deslizamiento se puede animar (con `display:none`/desmontar no habría transición). */
+.panelHistorial {
+  position: fixed;
+  top: 64px; /* debajo de .topbar, nunca la tapa */
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: calc(100vw - var(--space-6));
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform 200ms ease-in-out;
+}
+
+.panelHistorialAbierto {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panelHistorial {
+    transition: none;
+  }
+}
+
+.panelHistorialEncabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelHistorialTitulo {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.panelHistorialCerrar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.panelHistorialCerrar:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.panelHistorialContenido {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+@media (max-width: 639px) {
+  .panelHistorial {
+    top: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  /* En celular el panel ya ocupa el 100% del ancho — empujar el contenido no tiene sentido
+     ahí (no quedaría espacio), vuelve a flotar encima como un panel de pantalla completa. */
+  .paginaConPanel {
+    margin-right: auto;
+  }
+}

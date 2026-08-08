@@ -1,0 +1,77 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  color: var(--color-foreground);
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.iconoIzquierdo {
+  position: absolute;
+  left: var(--space-3);
+  display: flex;
+  align-items: center;
+  color: var(--color-muted-foreground);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  height: 44px; /* táctil, design-system.md §4.1 y §6.2 */
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-lg);
+  background: white;
+  color: var(--color-foreground);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.conIcono {
+  padding-left: var(--space-10);
+}
+
+.input:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 100, 124, 0.15);
+}
+
+.input:disabled {
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+.inputError {
+  border-color: var(--color-error);
+}
+.inputError:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.helper {
+  color: var(--color-muted-foreground);
+}

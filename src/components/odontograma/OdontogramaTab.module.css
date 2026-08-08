@@ -1,0 +1,64 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+}
+
+/* Pestañas Actual/Historial + "Editar"/"Listo" (accionesTab, pasado por la ficha de
+   paciente) en la misma fila — antes ese botón vivía en una fila aparte arriba de todo el
+   tab (feedback directo: "ponelo dentro de la barra donde están las pestañas"). */
+.filaVista {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  flex-wrap: wrap;
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding-bottom: var(--space-4, 16px);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.tabsDenticion {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.tabsDenticion button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-muted-foreground);
+}
+
+.activo {
+  color: var(--color-foreground) !important;
+  border-bottom-color: var(--color-primary-accent) !important;
+  font-weight: 600;
+}
+
+.accionesDeshacer {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  min-width: 0;
+  max-width: 100%;
+  /* Panel de herramientas arriba del diagrama, no al costado (revisión posterior — el
+     panel fijo de 260px le restaba ancho al diagrama y causaba scroll horizontal incluso
+     en pantallas grandes; con las dos filas de dientes apiladas y el panel ocupando el
+     ancho completo, las 32 piezas de una arcada entran sin scroll). */
+}

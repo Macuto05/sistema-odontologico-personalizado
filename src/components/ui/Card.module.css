@@ -1,0 +1,25 @@
+.card {
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  padding: var(--space-6) var(--space-6) 0;
+}
+
+.content {
+  padding: var(--space-6);
+}
+
+.footer {
+  padding: 0 var(--space-6) var(--space-6);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: flex-end;
+  /* 006-odontograma agregó un cuarto botón a la ficha de paciente — sin wrap, un footer
+     con varios botones se sale del viewport en mobile en vez de apilarse (Principio VI). */
+  flex-wrap: wrap;
+}

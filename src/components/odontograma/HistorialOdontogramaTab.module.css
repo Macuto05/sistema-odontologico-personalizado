@@ -1,0 +1,11 @@
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.leyendaMomento {
+  color: var(--color-muted-foreground);
+}

@@ -1,0 +1,386 @@
+/* Réplica del listado de Pacientes (`pacientes/pacientes.module.css`) para Insumos — mismo
+   layout, mismas métricas, misma tabla y misma paginación, según lo pedido. Lo propio de
+   esta pantalla es el resaltado de fila "a reponer" (FR-005). */
+
+/* Sin margin-left acá: ya lo resuelve `.content` de ShellLayout (docs/design-system.md
+   §6.20) — este <main> vive DENTRO de ese contenedor. Solo margin-top, porque TopAppBar es
+   position:fixed y no reserva espacio por sí solo. */
+.main {
+  margin-top: 64px;
+  padding: var(--space-6);
+  min-height: 100vh;
+}
+
+.headerSeccion {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  gap: var(--space-6);
+}
+
+.titulo {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  font-size: var(--font-size-base);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.controles {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Filtros (categoría + solo a reponer) — siempre visibles dentro de la 3ra tarjeta de
+   métricas (rediseño posterior), ya no en un popover. */
+.filtrosTarjeta {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--space-3);
+}
+
+.filtrosTarjetaEncabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* Categoría + checkbox uno al lado del otro (no apilados) — así la tarjeta respeta la
+   altura de las otras dos tarjetas de métrica en vez de crecer hacia abajo. */
+.filtrosFila {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filtrosCampoCategoria {
+  flex: 1;
+  min-width: 0;
+}
+
+.filtrosCampoCategoria select {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.filtrosLimpiar {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.filtrosLimpiar:hover {
+  text-decoration: underline;
+}
+
+/* Métricas en bento grid */
+.metricasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.metricaCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.metricaCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.metricaContenido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.metricaTitulo {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.metricaValor {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+/* Cuando hay insumos a reponer, el número usa el color de advertencia del design system
+   (§ paleta semántica) — no un color nuevo (Principio VI, research.md #6). */
+.metricaValorAlerta {
+  color: var(--color-warning);
+}
+
+.metricaIcono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.metricaIcono svg {
+  width: 24px;
+  height: 24px;
+}
+
+.metricaIconoAlerta {
+  color: var(--color-warning);
+}
+
+/* Tabla */
+.tablaContenedor {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: var(--space-6);
+}
+
+.tablaScroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  text-align: left;
+  padding: var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--space-4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  vertical-align: middle;
+}
+
+.tabla tbody tr {
+  transition: background 0.2s ease;
+}
+
+.tabla tbody tr:hover {
+  background: rgba(0, 100, 124, 0.04);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* FR-005: fila resaltada cuando stockActual <= stockMinimo. El color viene del token
+   semántico de advertencia ya existente — nunca solo color: la columna Estado siempre
+   lleva además el texto "A reponer" (regla de accesibilidad §4.1). */
+.filaAReponer {
+  background: var(--color-warning-bg);
+}
+
+.filaAReponer:hover {
+  background: var(--color-warning-bg);
+}
+
+.filaInsumo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  transition: color 0.2s ease;
+}
+
+.filaInsumo:hover {
+  color: var(--color-primary-hover);
+}
+
+.nombreInsumo {
+  display: block;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+}
+
+.sinCategoria {
+  color: var(--color-muted-foreground);
+}
+
+/* El stock actual en alerta se destaca del resto de los números de la fila. */
+.stockAlerta {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-warning);
+}
+
+/* Pie de página */
+.piePaginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.infoMostrando {
+  font-size: var(--font-size-sm);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.controlesPaginacion {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Responsive */
+@media (max-width: 1023px) {
+  .main {
+    padding: var(--space-4);
+  }
+
+  .headerSeccion {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: var(--space-6);
+  }
+
+  .metricasGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .tabla th,
+  .tabla td {
+    padding: var(--space-3);
+  }
+
+  .titulo {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+@media (max-width: 639px) {
+  .main {
+    margin-top: 64px;
+    padding: var(--space-4);
+    padding-bottom: 80px;
+  }
+
+  .headerSeccion {
+    flex-direction: column;
+  }
+
+  .controles {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tabla thead {
+    display: none;
+  }
+
+  .tabla,
+  .tabla tbody,
+  .tabla tr {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla tr {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* En tarjeta (móvil) el resaltado va en el borde, no solo en el fondo — el fondo de la
+     fila compite con el fondo blanco de la tarjeta. */
+  .tabla tr.filaAReponer {
+    border-color: var(--color-warning);
+    background: var(--color-warning-bg);
+  }
+
+  .tabla td {
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Etiqueta de columna en móvil: la tabla pierde el thead, así que cada celda dice qué es. */
+  .tabla td::before {
+    content: attr(data-columna);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    flex-shrink: 0;
+  }
+
+  .metricasGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .titulo {
+    font-size: var(--font-size-2xl);
+  }
+
+  .piePaginacion {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}

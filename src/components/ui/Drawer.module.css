@@ -1,0 +1,86 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 0.5); /* slate-900 con opacidad, mismo tono que Modal */
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1200; /* --z-modal, docs/design-system.md */
+}
+
+.panel {
+  background: var(--color-card);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.header {
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.headerAcento {
+  background: var(--color-primary-bg);
+}
+
+.headerFila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.subtitulo {
+  margin-top: var(--space-2);
+}
+
+.cerrar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-default);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cerrar:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+.cerrar:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 1px;
+}
+
+.cerrarAcento {
+  color: var(--color-primary-accent);
+}
+
+.cerrarAcento:hover {
+  background: color-mix(in srgb, var(--color-primary-accent) 15%, transparent);
+  color: var(--color-primary-accent);
+}
+
+.content {
+  padding: var(--space-6);
+  flex: 1;
+}
+
+/* Pantalla completa por debajo de 640px — mismo criterio que Modal (§4.0/§6.4). */
+@media (max-width: 639px) {
+  .panel {
+    max-width: none;
+  }
+}

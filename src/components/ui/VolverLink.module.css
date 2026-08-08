@@ -1,0 +1,30 @@
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+.volver:hover,
+.volver:focus-visible {
+  text-decoration: underline;
+}
+
+.volver:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+}
+
+.flecha {
+  width: 16px;
+  height: 16px;
+  transition: transform 150ms ease-in-out;
+}
+
+.volver:hover .flecha,
+.volver:focus-visible .flecha {
+  transform: translateX(-3px);
+}

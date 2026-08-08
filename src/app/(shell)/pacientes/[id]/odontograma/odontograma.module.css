@@ -1,0 +1,6 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  padding: var(--space-6, 24px);
+}

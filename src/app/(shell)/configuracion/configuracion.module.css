@@ -1,0 +1,84 @@
+/* Centrado dentro del espacio disponible a la derecha de la sidebar (ShellLayout ya resuelve
+   el offset por sidebar en `.content` — acá solo queda centrar con margin:auto, que se
+   recalcula solo al expandir/colapsar la sidebar, sin necesitar JS). */
+.main {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  margin-top: 64px; /* espacio para el TopAppBar fijo (§6.20) */
+}
+
+.headerSeccion {
+  margin-bottom: var(--space-8);
+}
+
+.titulo {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  font-size: var(--font-size-base);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.colIzquierda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.cardConsultorios {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.checklistPassword {
+  list-style: none;
+  margin: var(--space-2) 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: color 150ms ease;
+}
+
+.checklistItemPendiente {
+  color: var(--color-muted-foreground);
+}
+
+.checklistItemOk {
+  color: var(--color-success);
+}
+
+@media (max-width: 1023px) {
+  .main {
+    padding: var(--space-4);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .titulo {
+    font-size: var(--font-size-2xl);
+  }
+}

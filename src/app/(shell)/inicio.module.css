@@ -1,0 +1,180 @@
+/* Rediseño del Inicio — mismo lenguaje visual de tarjeta (ícono en caja de color + título +
+   valor) que pacientes.module.css / insumos.module.css, pero con una tarjeta que admite
+   contenido extra debajo (CTA, descripción) — ver TarjetaMetrica en page.tsx. */
+
+.main {
+  margin-top: 64px;
+  padding: var(--space-6);
+  min-height: 100vh;
+}
+
+.saludo {
+  margin: 0 0 var(--space-6) 0;
+}
+
+.errorBusqueda {
+  margin-bottom: var(--space-4);
+  max-width: 480px;
+}
+
+/* Columna izquierda (Pacientes activos, Insumos a reponer, Próximas citas) apilada, y el
+   gráfico de consultas por mes a la derecha estirado a la misma altura del stack completo
+   (align-items: stretch por defecto de CSS Grid) — así aprovecha el alto que antes quedaba
+   vacío en un gráfico de solo 160px. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.columnaIzquierda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.tarjeta {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: var(--space-6);
+  transition: all 0.2s ease;
+}
+
+.tarjeta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.tarjetaEncabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.tarjetaContenido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tarjetaTitulo {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.tarjetaValor {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.tarjetaValorAlerta {
+  color: var(--color-warning);
+}
+
+.tarjetaIcono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.tarjetaIcono svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tarjetaIconoAlerta {
+  color: var(--color-warning);
+}
+
+.tarjetaCuerpo {
+  margin-top: var(--space-4);
+}
+
+.tarjetaGrafico {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.graficoContenedor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-4);
+}
+
+/* Tarjeta "Próximamente" — apagada, con cinta diagonal en la esquina (adelanto de la
+   futura agenda con horario, todavía sin construir). */
+.tarjetaProximamente {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--color-muted);
+  border-style: dashed;
+}
+
+.tarjetaProximamente:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tarjetaProximamente .tarjetaIcono {
+  background: white;
+  color: var(--color-muted-foreground);
+}
+
+.cintaProximamente {
+  position: absolute;
+  top: 18px;
+  right: -34px;
+  width: 150px;
+  transform: rotate(45deg);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-1) 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 1023px) {
+  .main {
+    padding: var(--space-4);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+}
+
+@media (max-width: 639px) {
+  .main {
+    margin-top: 64px;
+    padding: var(--space-4);
+    padding-bottom: 80px;
+  }
+}

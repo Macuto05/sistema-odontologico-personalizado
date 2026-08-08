@@ -1,0 +1,88 @@
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.tablaWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-muted-foreground);
+  background: var(--color-muted);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.tabla tbody tr:first-child td {
+  border-top: none;
+}
+
+.acciones {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.iconoBoton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.iconoBoton:hover {
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+}
+
+.iconoBoton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+}
+
+.iconoBoton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sinDatos {
+  color: var(--color-muted-foreground);
+}
+
+.error {
+  color: var(--color-error);
+}

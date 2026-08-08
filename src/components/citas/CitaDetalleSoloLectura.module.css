@@ -1,0 +1,167 @@
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.seccion h3 {
+  margin: 0 0 var(--space-3);
+}
+
+.tituloSeccion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-foreground);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.iconoSeccion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-accent);
+  flex-shrink: 0;
+}
+
+.vacio {
+  color: var(--color-muted-foreground);
+}
+
+/* ---- Diagnóstico: tarjetas etiqueta + valor ---- */
+
+.campos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.campo {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.campo p {
+  margin: 0;
+}
+
+.campoEtiqueta {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+}
+
+/* ---- Receta: lista con ícono por medicamento ---- */
+
+.recetaLista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.recetaItem {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.recetaItem + .recetaItem {
+  border-top: 1px solid var(--color-border);
+}
+
+.recetaIcono {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recetaNombre {
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.recetaMeta {
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.recetaMeta strong {
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+
+/* ---- Estudios complementarios: recuadro tintado, mismo criterio que Alert variant="info" ---- */
+
+.estudiosLista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.estudio {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.estudio p {
+  margin: 0;
+}
+
+.iconoInfo {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-primary-accent);
+}
+
+.archivosLista {
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ---- Meta línea (fecha/hora · categoría) — subtítulo del Drawer con acento en CitasTab ---- */
+
+.metaLinea {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.metaPunto {
+  color: var(--color-muted-foreground);
+}

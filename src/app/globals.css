@@ -1,0 +1,250 @@
+/*
+  Tokens de diseño — fuente: docs/design-system.md (v1.10.0).
+  No agregar valores sueltos acá: si falta un token, se actualiza design-system.md primero
+  (Principio VI de la constitución).
+*/
+:root {
+  /* --- Primitivos: color (design-system.md §2.1) --- */
+  --color-slate-50: #f6fafd;
+  --color-slate-100: #f0f4f7;
+  --color-slate-200: #dfe3e6;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-700: #3e484d;
+  --color-slate-900: #171c1e;
+
+  --color-cyan-50: #ecfeff;
+  --color-cyan-600: #0891b2;
+  --color-cyan-700: #00647c;
+  --color-cyan-800: #00596f;
+  --color-cyan-900: #003d52;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-500: #14b8a6;
+  --color-teal-700: #0f766e;
+
+  --color-red-50: #fef2f2;
+  --color-red-600: #dc2626;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+
+  /* Rampa derivada de #905ca2 — el morado real de marca de la odontóloga (usado en el
+     talonario imprimible, RecetaImprimible.module.css) — en vez del morado genérico
+     original. 700 es el color de marca tal cual; el resto se derivó ajustando L/S en HSL
+     con los mismos deltas relativos que ya tenía la rampa anterior entre 600/700/800/900,
+     para no perder la progresión de tono. Contraste contra blanco verificado (design-
+     system.md §4): 700 (base, botones) 4.95:1 — pasa AA texto normal (4.5:1); 800/900
+     (hover/active) 6.49:1/8.34:1 — sin problema. 600 (acento/foco) 3.98:1 — mismo criterio
+     que --color-cyan-600, no se usa para texto, solo íconos/bordes/anillo de foco. */
+  --color-purple-50: #faf6fb;
+  --color-purple-600: #a865be;
+  --color-purple-700: #905ca2;
+  --color-purple-800: #784e87;
+  --color-purple-900: #62426d;
+
+  /* --- Primitivos: espaciado, base 4px (design-system.md §2.2) --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* --- Primitivos: tipografía (design-system.md §2.3) --- */
+  --font-family-base: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* --- Primitivos: radio y sombra (design-system.md §2.4) --- */
+  --radius-default: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+
+  /* --- Semánticos: superficies y texto (design-system.md §3.1) --- */
+  --color-background: var(--color-slate-50);
+  --color-foreground: var(--color-slate-700);
+  --color-card: #ffffff;
+  --color-card-foreground: var(--color-slate-700);
+  --color-border: var(--color-slate-200);
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-input-border: var(--color-slate-300);
+
+  /* --- Semánticos: primario / secundario / neutro (design-system.md §3.2) --- */
+  --color-primary: var(--color-cyan-700);
+  --color-primary-hover: var(--color-cyan-800);
+  --color-primary-active: var(--color-cyan-900);
+  --color-primary-foreground: white;
+  --color-primary-accent: var(--color-cyan-600);
+  --color-primary-bg: var(--color-cyan-50);
+  --color-secondary: var(--color-slate-200);
+  --color-secondary-hover: var(--color-slate-300);
+  --color-secondary-foreground: var(--color-slate-700);
+  --color-muted: var(--color-slate-100);
+  --color-muted-foreground: var(--color-slate-500);
+  --color-ring: var(--color-cyan-600);
+
+  /* --- Semánticos: estados (design-system.md §3.3) --- */
+  --color-success: var(--color-teal-700);
+  --color-success-accent: var(--color-teal-500);
+  --color-success-bg: var(--color-teal-50);
+  --color-success-foreground: white;
+  --color-error: var(--color-red-600);
+  --color-error-bg: var(--color-red-50);
+  --color-error-foreground: white;
+  --color-warning: var(--color-amber-700);
+  --color-warning-accent: var(--color-amber-600);
+  --color-warning-bg: var(--color-amber-50);
+  --color-warning-foreground: var(--color-slate-900);
+  --color-info: var(--color-cyan-700);
+  --color-info-bg: var(--color-cyan-50);
+  --color-info-foreground: white;
+
+  /* --- Semántico fijo, no themable (design-system.md §3.2.2) --- */
+  --color-odontograma-azul: var(--color-cyan-700);
+
+  /* --- Breakpoints (design-system.md §4.0) --- */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+}
+
+/* Tema de apariencia (design-system.md §3.2.1) — reasigna la familia primary + ring +
+   primary-bg. Los tokens de estado (éxito/error/advertencia/info) y --color-odontograma-azul
+   (§3.2.2, fijo a propósito) no cambian con el tema. */
+[data-theme="morado"] {
+  --color-primary: var(--color-purple-700);
+  --color-primary-hover: var(--color-purple-800);
+  --color-primary-active: var(--color-purple-900);
+  --color-primary-accent: var(--color-purple-600);
+  --color-primary-bg: var(--color-purple-50);
+  --color-ring: var(--color-purple-600);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Impresión de una sola hoja (ej. receta de una cita) sin que se cuele el resto de la app
+   — ver layout.tsx (#app-shell/#print-root) y RecetaImprimible.tsx. #print-root está
+   siempre vacío salvo mientras algo necesita imprimirse (portal montado a demanda), así
+   que en pantalla no hace falta ocultarlo aparte. Solo en @media print se decide qué se
+   ve: la app entera se oculta y el contenido del portal pasa a ocupar toda la hoja. */
+#print-root {
+  display: none;
+}
+
+@media print {
+  #app-shell {
+    display: none;
+  }
+  #print-root {
+    display: block;
+  }
+}
+
+/* Jerarquía tipográfica cerrada — design-system.md §3.4. No usar tamaños fuera de esta lista. */
+.text-heading-lg {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+}
+.text-heading {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+}
+.text-subheading {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-normal);
+}
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--leading-normal);
+}
+.text-body-sm {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--leading-normal);
+}
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--leading-normal);
+}
+
+/* --- Utilidades modernas: sombras y efectos --- */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hover-elevate {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

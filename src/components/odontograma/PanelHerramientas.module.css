@@ -1,0 +1,185 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  padding: var(--space-4, 16px);
+  /* --color-muted (no --color-card) para distinguir esta franja de herramientas del resto
+     de la tarjeta blanca y del diagrama — mismo criterio que el boceto aprobado. */
+  background: var(--color-muted);
+}
+
+.fila1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.acciones {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.ayuda {
+  color: var(--color-muted-foreground);
+}
+
+.fila2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4, 16px);
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .fila2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bloqueHallazgos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.subtitulo {
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.hallazgosLista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hallazgoItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  /* Igual que el textarea de Nota (fondo blanco propio) — se distingue del gris de .panel. */
+  background: var(--color-card);
+}
+
+.hallazgoInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.hallazgoAcciones {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.bannerMultiDiente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--color-border);
+  /* var(--color-card), no var(--color-muted): .panel ya es gris, este banner necesita
+     contraste propio para destacar (mismo criterio que .hallazgoItem y el textarea). */
+  background: var(--color-card);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.errorMultiDiente {
+  flex-basis: 100%;
+  color: var(--color-error);
+}
+
+.fila3 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.pestanaCategoria {
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  border-radius: 999px;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  font: inherit;
+  font-size: var(--font-size-sm, 13px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pestanaCategoria:hover {
+  border-color: var(--color-ring);
+}
+
+.pestanaCategoria:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 1px;
+}
+
+.pestanaCategoriaActiva {
+  background: var(--color-primary-accent);
+  border-color: var(--color-primary-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.condiciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.botonCondicion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-default, 6px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.botonCondicion:hover,
+.botonCondicion:focus-visible {
+  border-color: var(--color-ring);
+  outline: none;
+}
+
+.variantes {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}

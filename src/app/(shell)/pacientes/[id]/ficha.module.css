@@ -1,0 +1,193 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.formularioContenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Encabezado — mismo lenguaje visual que el Panel de Atención (§6.15): tarjeta con
+   --shadow-md, no --shadow-sm, para no verse "plano" (feedback directo de la odontóloga). */
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5) var(--space-6);
+}
+
+.identidad {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  /* Sin esto, un nombre largo no puede achicarse/wrappear dentro de .encabezado (flex
+     nowrap por defecto) y empuja la página entera a scrollear horizontalmente en mobile —
+     mismo motivo que .diagrama en DiagramaBoca.module.css. */
+  min-width: 0;
+}
+
+.identidadTexto {
+  min-width: 0;
+}
+
+.nombreEstado {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.subtitulo {
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.accionesEncabezado {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.panelTab {
+  display: flex;
+  flex-direction: column;
+}
+
+.secciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tarjeta {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+}
+
+.tituloConAccion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.tituloConAccion .tituloSeccion {
+  margin: 0;
+}
+
+.editarBoton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: none;
+  background: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.editarBoton:hover {
+  background: var(--color-primary-bg);
+}
+
+.editarBoton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+}
+
+.tituloSeccion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-4);
+}
+
+.tituloSeccion svg {
+  color: var(--color-primary);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.colCompleta {
+  grid-column: 1 / -1;
+}
+
+.grid1 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (max-width: 767px) {
+  .grid3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .grid2,
+  .grid3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.campoIcono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+.campoLabel {
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.sinDatos {
+  color: var(--color-muted-foreground);
+}

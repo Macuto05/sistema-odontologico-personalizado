@@ -1,0 +1,180 @@
+.diente {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  /* Escala 1.25x sobre el tamaño original (42px) — la cruz de superficies era demasiado
+     chica para tocar con el dedo en celular (feedback directo de la odontóloga). Ver
+     LineaMultiDiente.tsx (ANCHO_COLUMNA) y DiagramaBoca.tsx (overlay) para las constantes
+     que dependen de este mismo ancho. */
+  width: 52px;
+  /* Sin esto, un contenedor `.arcada` angosto (menos de 32*57px) comprime cada diente por
+     debajo de estos 52px (flex-shrink:1 es el default) — el overlay de líneas multi-diente
+     (LineaMultiDiente.tsx, ANCHO_COLUMNA=57) sigue asumiendo el ancho sin comprimir, así
+     que su SVG termina más ancho que la fila real de dientes y `.diagrama`'s
+     overflow-x:auto expone ese sobrante como scroll hacia espacio en blanco (feedback
+     directo de la odontóloga: "voy hacia la derecha y es puro espacio blanco"). Con
+     flex-shrink:0 el scroll horizontal, cuando hace falta, siempre revela dientes reales. */
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Línea divisoria izquierda/derecha (primer diente del lado derecho de cada arcada) —
+   border en vez de padding/margin para no alterar el ancho de la caja: los cálculos por
+   índice del overlay de línea multi-diente (Parte C) asumen 42px + 4px de gap fijos por
+   diente en toda la fila. */
+.divisor {
+  border-left: 1px dashed var(--color-border);
+}
+
+.numero {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  line-height: 1;
+}
+
+.corona {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 43px;
+  height: 38px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  /* El contorno real de la corona lo dibuja .coronaFondo (svg) — un botón rectangular
+     sin silueta propia no puede trazar un borde que siga un contorno irregular
+     (clip-path recorta el borde rectangular existente, dejando huecos en las zonas
+     cóncavas en vez de seguir el contorno). */
+  --diente-borde: var(--color-border);
+}
+
+.corona:hover {
+  --diente-borde: var(--color-ring);
+}
+
+.corona:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 1px;
+}
+
+.coronaFondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.coronaFondo path {
+  fill: var(--color-card);
+  stroke: var(--diente-borde);
+  stroke-width: 1.5;
+}
+
+.seleccionado {
+  --diente-borde: var(--color-primary-accent);
+  filter: drop-shadow(0 0 0 1px var(--color-primary-accent));
+}
+
+.corona.seleccionado .coronaFondo path {
+  stroke-width: 2.25;
+}
+
+.iconosChicos {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1px;
+  max-width: 100%;
+}
+
+.cruz {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  gap: 1px;
+  background: var(--color-border);
+}
+
+.celda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-card);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.celda:hover {
+  background: var(--color-muted);
+}
+
+.celda:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+
+.celda.seleccionado {
+  background: color-mix(in srgb, var(--color-primary-accent) 20%, var(--color-card));
+  box-shadow: inset 0 0 0 2px var(--color-primary-accent);
+}
+
+.arriba {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.izquierda {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.centro {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.derecha {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.abajo {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.raiz {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  background: color-mix(in srgb, var(--color-muted-foreground) 45%, transparent);
+  margin-top: -3px;
+  /* Angosta desde el ancho del cuello de la corona hasta una punta redondeada — pieza
+     visualmente continua con .corona, no un triángulo geométrico. Coordenadas escaladas
+     1.25x sobre el path original (14x14). */
+  clip-path: path(
+    "M0,0 L17.5,0 C17.5,1.25 16.25,8.75 12.5,12.5 C10.625,14.375 9.375,15.625 8.75,17.5 C8.125,15.625 6.875,14.375 5,12.5 C1.25,8.75 0,1.25 0,0 Z"
+  );
+}
+
+/* Ícono de Resto radicular (X_RAIZ), centrado sobre la raíz en vez de apilado como ícono
+   chico sobre la corona — ver `esSimboloRaizCompleta`. */
+.raizIconos {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

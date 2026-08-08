@@ -1,0 +1,47 @@
+.diagrama {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+  overflow-x: auto;
+  padding: var(--space-2, 8px);
+  flex: 1;
+  /* Sin min-width:0 + max-width:100%, un hijo flex no se achica por debajo del ancho de su
+     contenido (min-width:auto implícito) y el overflow-x:auto de arriba nunca llega a
+     activarse — la fila de 32 dientes empujaría la página entera en vez de scrollear
+     dentro de este contenedor. */
+  min-width: 0;
+  max-width: 100%;
+}
+
+.arcada {
+  display: flex;
+  /* Centrada, no flex-start — con el panel de herramientas ahora arriba (no al costado)
+     sobra ancho a los dos lados y los dientes quedaban pegados a la izquierda (feedback
+     directo de la odontóloga). Si la fila no entra, overflow-x:auto de .diagrama sigue
+     scrolleando igual, centrado no le cambia nada a ese caso. */
+  justify-content: center;
+}
+
+/* Ancho natural (nunca estirada por el centrado del padre) — ver el comentario en
+   DiagramaBoca.tsx `renderArcada`: el overlay absoluto se ancla acá, no a `.arcada`. */
+.fila {
+  position: relative;
+  display: flex;
+  gap: 5px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.inferior {
+  border-top: 1px dashed var(--color-border);
+  padding-top: var(--space-4, 16px);
+}
+
+/* Línea continua de condiciones "TRAMO" (Puente fijo, Edentulismo, Prótesis removible) —
+   coordenadas por índice de columna, no medición de DOM (ver LineaMultiDiente.tsx). */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

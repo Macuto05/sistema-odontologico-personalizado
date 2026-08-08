@@ -1,0 +1,223 @@
+/* Indicador de estado de sincronización — 011-indicador-sincronizacion.
+   Todos los colores salen de los tokens semánticos de estado ya ratificados
+   (docs/design-system.md §3.3): ninguno nuevo, ninguno hardcodeado (Principio VI). */
+
+.contenedor {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Variante para pantallas sin TopAppBar (research.md #7): se posiciona sola, alineada con
+   donde estaría dentro de la barra (64px de alto, mismo padding lateral). */
+.fija {
+  position: fixed;
+  top: 0;
+  right: var(--space-6);
+  height: 64px;
+  align-items: center;
+  z-index: 21; /* por encima de TopAppBar (20) — nunca coexisten, pero sí con overlays de página */
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  /* 44px, no menos: §4.1 exige ese mínimo táctil en los tres rangos de pantalla, sin
+     achicarse en escritorio. Coincide con el alto del `Button` default que ya vive en esta
+     misma barra. */
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.2s ease;
+}
+
+.pill:hover {
+  filter: brightness(0.96);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* --- Los 4 estados (research.md #1) ------------------------------------------------- */
+
+.offline {
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+.sincronizando {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* Solo el punto pulsa, no el pill entero — un fondo parpadeando en la barra superior de
+   todas las pantallas es exactamente el tipo de movimiento que cansa en uso prolongado. */
+.sincronizando .punto {
+  animation: pulso 1.4s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.conflicto {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.al_dia {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+/* --- Panel desplegable --------------------------------------------------------------- */
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 264px;
+  padding: var(--space-4);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 30;
+}
+
+/* En la variante fija el pill está centrado en 64px de alto: el panel se ancla al pill, no
+   al borde superior de la ventana. */
+.fija .panel {
+  top: calc(50% + 20px);
+}
+
+.panelTitulo {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+}
+
+.panelFila {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground);
+}
+
+.panelNota {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-muted-foreground);
+}
+
+.barraFondo {
+  display: block;
+  height: 4px;
+  margin-top: var(--space-2);
+  border-radius: 2px;
+  background: var(--color-muted);
+  overflow: hidden;
+}
+
+.barraRelleno {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-info);
+  transition: width 0.3s ease;
+}
+
+.listaConflictos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.itemConflicto {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.itemConflicto:last-child {
+  border-bottom: none;
+}
+
+.tipoOperacion {
+  color: var(--color-muted-foreground);
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sincronizando .punto {
+    animation: none;
+  }
+
+  .barraRelleno,
+  .pill {
+    transition: none;
+  }
+}
+
+/* Mobile: mismo breakpoint que TopAppBar.module.css, donde los botones de la barra ya se
+   achican. El pill colapsa a solo el punto de color — el texto sigue disponible para
+   lectores de pantalla vía aria-label, y completo dentro del panel al tocarlo (§4.1). */
+@media (max-width: 639px) {
+  .texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Colapsado a solo el punto, pero sin bajar de 44×44px (§4.1) — el área táctil no se
+     achica por ser una pantalla chica; si acaso es donde más importa. */
+  .pill {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .fija {
+    right: var(--space-4);
+  }
+
+  .panel {
+    width: 240px;
+  }
+}

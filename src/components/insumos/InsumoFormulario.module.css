@@ -1,0 +1,41 @@
+.secciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.tituloSeccion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-4);
+}
+
+.tituloSeccion svg {
+  color: var(--color-primary);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.colCompleta {
+  grid-column: 1 / -1;
+}
+
+/* Aviso en vivo de "a reponer" mientras se completan los stocks — evita que el odontólogo
+   tenga que guardar para descubrir que el insumo ya queda en alerta. */
+.avisoReponer {
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 639px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

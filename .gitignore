@@ -1,0 +1,39 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Env
+.env
+.env*.local
+
+# Prisma
+prisma/dev.db*
+
+# Build / misc
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Service worker generado por @ducanh2912/next-pwa (build de producción)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+
+# Testing
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.superpowers/

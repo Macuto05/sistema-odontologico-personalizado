@@ -1,0 +1,71 @@
+.pagina {
+  padding: var(--space-6);
+  max-width: 1100px;
+  margin: 64px auto 0; /* espacio para el TopAppBar fijo (§6.20) */
+}
+
+.titulo {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-4);
+  letter-spacing: -0.02em;
+}
+
+.tips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 767px) {
+  .tips {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tip {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.tipIcono {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+}
+
+.tipTitulo {
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-medium);
+  margin: 0 0 var(--space-1);
+}
+
+.tip_info {
+  background: var(--color-info-bg);
+}
+.tip_info .tipIcono {
+  color: var(--color-info);
+}
+
+.tip_warning {
+  background: var(--color-warning-bg);
+}
+.tip_warning .tipIcono {
+  color: var(--color-warning);
+}
+
+.tip_neutro {
+  background: var(--color-muted);
+}
+.tip_neutro .tipIcono {
+  color: var(--color-muted-foreground);
+}

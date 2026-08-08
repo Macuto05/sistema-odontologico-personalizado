@@ -1,0 +1,388 @@
+/* docs/design-system.md §6.8 */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding: var(--space-4);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  /* Colapso/expansión manual (§6.8) suave en vez de instantáneo — feedback directo de la
+     odontóloga. `.content` (shell.module.css) anima el mismo margin-left en paralelo para
+     que el contenido acompañe el movimiento en vez de saltar. */
+  transition: width 200ms ease-in-out, padding 200ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+/* Botón de colapso manual — docs/design-system.md §6.8. Solo visible en escritorio
+   (≥1024px): en tablet/celular la sidebar ya cambia de forma por breakpoint, togglearla
+   ahí no tendría sentido. */
+.toggleFila {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .toggleFila {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--space-2);
+  }
+
+  .colapsada .toggleFila {
+    justify-content: center;
+  }
+}
+
+.toggleBoton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+
+.toggleBoton:hover {
+  background: var(--color-secondary);
+}
+
+.toggleBoton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+}
+
+.toggleIcono {
+  width: 16px;
+  height: 16px;
+}
+
+/* Logo — docs/design-system.md §6.8. */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.logoIcon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.logoText {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.logoSubtext {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted-foreground);
+  white-space: nowrap;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-primary);
+  transform: translateX(4px);
+}
+
+/* Ítem activo: borde derecho azul + fondo sutil, siguiendo Material Design 3 */
+.active {
+  background: rgba(0, 100, 124, 0.08);
+  color: var(--color-primary);
+  border-right: 4px solid var(--color-primary);
+  padding-right: calc(var(--space-3) - 4px);
+}
+
+.active:hover {
+  background: rgba(0, 100, 124, 0.12);
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* Pie: tarjeta de perfil + cerrar sesión */
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Ya no es un link (el engranaje del TopAppBar lleva a Configuración) — sin cursor:pointer
+   ni hover, para no sugerir una acción que no existe. */
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  color: var(--color-foreground);
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  border: 2px solid rgba(0, 100, 124, 0.1);
+}
+
+.perfilTexto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.perfilNombre {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perfilRol {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Cerrar sesión en rojo — acción destructiva/de riesgo, mismo criterio que Button destructive. */
+.logout {
+  color: var(--color-error);
+}
+
+.logout:hover {
+  background: var(--color-error-bg);
+}
+
+/* Tablet: sidebar angosta, solo íconos (etiqueta pasa a aria-label) — §4.0 */
+@media (max-width: 1023px) {
+  .sidebar {
+    width: 64px;
+    align-items: center;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .logo {
+    padding: 0;
+    margin-bottom: var(--space-3);
+  }
+
+  .logoText {
+    display: none;
+  }
+
+  .item {
+    justify-content: center;
+  }
+
+  .perfil {
+    justify-content: center;
+  }
+
+  .perfilTexto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* Colapsada a solo íconos por ruta (panel de Atención, Sidebar.tsx) — mismas reglas que la
+   versión angosta de tablet, pero forzadas independientemente del viewport. Guardada detrás
+   de min-width:640px para no pisar la barra de navegación inferior de celular, que tiene su
+   propio layout incompatible con estas reglas. */
+@media (min-width: 640px) {
+  .sidebar.colapsada {
+    width: 64px;
+    align-items: center;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .colapsada .logo {
+    padding: 0;
+    margin-bottom: var(--space-3);
+  }
+
+  .colapsada .logoText {
+    display: none;
+  }
+
+  .colapsada .item {
+    justify-content: center;
+  }
+
+  .colapsada .perfil {
+    justify-content: center;
+  }
+
+  .colapsada .perfilTexto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .colapsada .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* Celular: colapsa a barra de navegación inferior — §4.0 */
+@media (max-width: 639px) {
+  .sidebar {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-1);
+  }
+
+  .logo {
+    display: none;
+  }
+
+  .list {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .item {
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    min-width: 44px;
+  }
+
+  .active {
+    box-shadow: none;
+  }
+
+  .label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    font-size: var(--font-size-xs);
+  }
+
+  .footer {
+    flex-direction: row;
+    border-top: none;
+    padding-top: 0;
+    gap: var(--space-1);
+  }
+
+  .perfilTexto {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+
+  .perfilNombre,
+  .perfilRol {
+    display: none;
+  }
+
+  .logout .label {
+    display: none;
+  }
+}

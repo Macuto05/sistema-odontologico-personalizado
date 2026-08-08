@@ -1,0 +1,26 @@
+.fila {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px; /* táctil, design-system.md §4.1 */
+  cursor: pointer;
+}
+
+.input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-default);
+  cursor: pointer;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 20%, transparent);
+}
+
+.label {
+  color: var(--color-foreground);
+}

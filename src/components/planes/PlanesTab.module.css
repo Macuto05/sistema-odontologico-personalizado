@@ -1,0 +1,39 @@
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+}
+
+.seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+/* Mismo criterio que .diagrama en DiagramaBoca.module.css: la tabla scrollea horizontal
+   dentro de su propia caja en pantallas angostas, la página nunca scrollea horizontal. */
+.tablaContenedor {
+  overflow-x: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: var(--space-2, 8px);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.celdaRealizado {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}

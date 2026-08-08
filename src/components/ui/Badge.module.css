@@ -1,0 +1,25 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-default);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.muted {
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+/* 010-gestion-insumos: estado de alerta de negocio ("A reponer", FR-005). Usa los tokens
+   semánticos de advertencia que ya existían — sin colores nuevos (Principio VI). */
+.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}

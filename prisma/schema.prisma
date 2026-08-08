@@ -1,0 +1,391 @@
+// Ver constitution.md §Technology & Architecture Constraints y specs/001-gestion-pacientes/data-model.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EstadoPaciente {
+  ACTIVO
+  ARCHIVADO
+}
+
+/// 010-gestion-insumos, FR-013/FR-014. Mismo par de estados que EstadoPaciente — enum
+/// propio en vez de reutilizar aquel: son dominios distintos que podrían divergir, y
+/// compartirlo acoplaría dos entidades sin relación (Principio V).
+enum EstadoInsumo {
+  ACTIVO
+  ARCHIVADO
+}
+
+enum Genero {
+  MASCULINO
+  FEMENINO
+  OTRO
+}
+
+enum EstadoCivil {
+  SOLTERO
+  CASADO
+  DIVORCIADO
+  VIUDO
+  UNION_LIBRE
+}
+
+/// 005-atencion-paciente, FR-002/FR-014/FR-016. Sin transición de vuelta a EN_CURSO.
+enum EstadoCita {
+  EN_CURSO
+  FINALIZADA
+}
+
+/// Catálogo fijo de tipo de consulta (005-atencion-paciente, FR-006, research.md #12).
+enum CategoriaConsulta {
+  CONTROL
+  URGENCIA
+  LIMPIEZA_PROFILAXIS
+  ENDODONCIA
+  EXTRACCION
+  RESTAURACION_OBTURACION
+  ORTODONCIA
+  CIRUGIA
+  CONSULTA_GENERAL
+  OTRO
+}
+
+/// 005-atencion-paciente, FR-018. Determinado por el Content-Type recibido al subir.
+enum TipoArchivoEstudio {
+  IMAGEN
+  PDF
+}
+
+/// 006-odontograma, FR-002. Determina numeración FDI y subconjunto de catálogo (FR-012).
+enum Denticion {
+  ADULTO
+  NINO
+}
+
+/// 006-odontograma — las 5 caras marcables de un diente (FR-003). `null` en HallazgoDental
+/// (embebido, no columna) significa "diente completo".
+enum Superficie {
+  MESIAL
+  DISTAL
+  VESTIBULAR
+  PALATINO_LINGUAL
+  OCLUSAL_INCISAL
+}
+
+/// 006-odontograma, FR-005 — convención rojo=pendiente/azul=realizado. Solo las
+/// condiciones con `admiteEstadoColor` en el catálogo usan este campo.
+enum EstadoColorHallazgo {
+  PENDIENTE
+  REALIZADO
+}
+
+/// 006-odontograma, FR-009/FR-010 — tipo de evento del historial de auditoría append-only
+/// (research.md #4).
+enum TipoCambioOdontograma {
+  AGREGADO
+  EDITADO
+  ELIMINADO
+  /// Marcador de "cierre de sesión de edición" (revisión posterior) — sin hallazgoId/
+  /// notaId/snapshot propios; ver `crearCheckpointOdontograma`.
+  CHECKPOINT
+}
+
+/// Catálogo fijo de antecedentes personales patológicos (003-historia-clinica-paciente,
+/// FR-002). "Otros" no es un valor de este enum — es texto libre aparte
+/// (Paciente.antecedentesPatologicosOtros).
+enum AntecedentePatologico {
+  DIABETES
+  HEPATITIS
+  ARTRITIS
+  ASMA_EPOC
+  ANEMIA
+  INFARTO
+  ENFERMEDADES_PULMONARES
+  HIPERTIROIDISMO
+  HIPOTIROIDISMO
+  CONVULSIONES_DESMAYOS
+  HIPERTENSION_HIPOTENSION
+  SINUSITIS
+  ANGINA_PECHO
+  FIEBRE_REUMATICA
+  GASTRITIS
+  ULCERA_GASTRICA
+  ENFERMEDADES_TRANSMISION_SEXUAL
+  ARTERIOSCLEROSIS
+  ALTERACIONES_METABOLICAS
+  ENFERMEDADES_ENDOCRINAS
+  OSTEOPOROSIS
+}
+
+/// Cuenta única del odontólogo (Principio IV: un solo rol, autenticado). No hay tabla de
+/// pacientes-como-usuarios: este sistema no tiene portal de pacientes (spec §Assumptions).
+model Usuario {
+  id           String   @id @default(uuid())
+  /// Nombre del odontólogo — usado en el saludo del inicio y editable en Configuración
+  /// (002-pantalla-inicio). No existía antes de esa feature.
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+/// Entidad de dominio Paciente — ver data-model.md. El id lo genera el cliente (UUID v4),
+/// no autoincremental, porque una ficha creada offline necesita un id definitivo de
+/// inmediato (research.md #3).
+model Paciente {
+  id                 String         @id
+  nombreCompleto     String
+  /// `null` cuando el paciente es representado por un adulto y no tiene documento propio
+  /// (007-representante-menor, FR-001). Postgres permite múltiples NULL en una columna
+  /// única sin violar la restricción — dos pacientes sin documento no chocan entre sí.
+  documentoIdentidad String?        @unique
+  fechaNacimiento    DateTime       @db.Date
+  telefono           String?
+  email              String?
+  direccion          String?
+  genero             Genero?
+  estadoCivil        EstadoCivil?
+  ocupacion          String?
+  /// Datos del adulto que representa al paciente (007-representante-menor, FR-002) — texto
+  /// libre, sin relación ni unicidad contra `documentoIdentidad` de ningún paciente.
+  representanteNombre String?
+  representanteCedula String?
+  /// Historia clínica (003-historia-clinica-paciente) — ver data-model.md de esa feature.
+  /// Los 4 campos de abajo eran texto libre; pasaron a listas de etiquetas independientes
+  /// (008-rediseno-visual-sistema) — mismo patrón de array nativo que antecedentesPatologicos.
+  antecedentesPatologicos      AntecedentePatologico[] @default([])
+  antecedentesPatologicosOtros String[]                @default([])
+  antecedentesHeredofamiliares String[]                @default([])
+  medicamentosActuales         String[]                @default([])
+  alergias                     String[]                @default([])
+  estado             EstadoPaciente @default(ACTIVO)
+  /// Incrementado en cada edición; usado para detectar conflictos de sync (research.md #5)
+  version            Int            @default(1)
+  /// Snapshot de un conflicto de sync sin resolver: { versionServidor, versionDispositivo, detectadoEn }
+  conflictoPendiente Json?
+  /// Consultorio asignado (004-consultorios, FR-006/FR-007). Opcional — `null` significa
+  /// "sin consultorio". Si el consultorio se elimina, esta columna vuelve a `null`
+  /// automáticamente (`onDelete: SetNull`, FR-005) sin afectar el resto de la ficha.
+  consultorioId      String?
+  consultorio        Consultorio?   @relation(fields: [consultorioId], references: [id], onDelete: SetNull)
+  /// Citas de atención (005-atencion-paciente) — ver data-model.md de esa feature.
+  citas              Cita[]
+  /// Odontograma(s) (006-odontograma) — hasta uno por Denticion, ver data-model.md.
+  odontogramas       Odontograma[]
+  itemsPlanTratamiento ItemPlanTratamiento[]
+  /// Archivos sueltos del paciente (pestaña "Archivos" de la ficha, rediseño visual
+  /// posterior) — a diferencia de ArchivoEstudio, no cuelgan de ninguna Cita/Estudio.
+  archivos           ArchivoPaciente[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([estado])
+}
+
+/// Insumo/material del consultorio (010-gestion-insumos) — ver data-model.md de esa
+/// feature. Local-first igual que Paciente: el id lo genera el cliente (UUID v4) para poder
+/// dar de alta sin conexión (research.md #3).
+///
+/// No tiene identificador único de negocio (a diferencia de Paciente.documentoIdentidad):
+/// dos insumos pueden llamarse igual (spec §Edge Cases). El estado "a reponer" NO es una
+/// columna — se deriva de `stockActual <= stockMinimo` en cada lectura (research.md #4),
+/// para que no pueda quedar desincronizado del stock real.
+model Insumo {
+  id                 String       @id
+  nombre             String
+  /// Texto libre opcional (research.md #5) — no hay tabla de categorías: las opciones del
+  /// filtro se derivan de los valores distintos ya usados por insumos activos.
+  categoria          String?
+  /// Ambos >= 0 (FR-003). `stockMinimo` en 0 es válido: "avisar solo si se agota".
+  stockActual        Int
+  stockMinimo        Int
+  estado             EstadoInsumo @default(ACTIVO)
+  /// Incrementado en cada edición; detección de conflictos de sync, igual que Paciente.
+  version            Int          @default(1)
+  conflictoPendiente Json?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([estado])
+}
+
+/// Registro de operaciones de sync ya aplicadas — permite que /api/sync sea idempotente
+/// (contracts/sync-api.md): si el cliente reintenta un lote, se devuelve el mismo
+/// resultado en vez de volver a aplicar la mutación.
+model OperacionSincronizada {
+  id           String   @id
+  resultado    Json
+  procesadoEn  DateTime @default(now())
+}
+
+/// Sede/lugar de trabajo definido libremente por la odontóloga (004-consultorios,
+/// FR-001 a FR-004). Local-first igual que Paciente — ver data-model.md de esta feature.
+model Consultorio {
+  id        String     @id
+  nombre    String
+  /// `nombre.trim().toLowerCase()`, calculado en la capa de aplicación — es la columna
+  /// que lleva la unicidad case-insensitive (FR-003, research.md #4). Nunca se expone ni
+  /// se edita directamente; no existe en el dominio ni en Dexie.
+  nombreNormalizado String @unique
+  createdAt DateTime   @default(now())
+  pacientes Paciente[]
+}
+
+/// Registro de una atención puntual (005-atencion-paciente) — ver data-model.md. El id lo
+/// genera el cliente (UUID v4), igual que Paciente/Consultorio, para poder iniciar una
+/// atención offline (research.md #6). `recetaItems`/`estudioItems` van embebidos como
+/// Json — no son tablas propias (research.md #2); los archivos de estudio sí lo son
+/// (`ArchivoEstudio`, research.md #3) porque son binarios y online-only.
+model Cita {
+  id                 String              @id
+  pacienteId         String
+  paciente           Paciente            @relation(fields: [pacienteId], references: [id])
+  estado             EstadoCita          @default(EN_CURSO)
+  categoria          CategoriaConsulta?
+  motivoConsulta     String?
+  diagnostico        String?
+  /// ItemReceta[] embebido — research.md #2.
+  recetaItems        Json                @default("[]")
+  /// EstudioItem[] embebido (sin archivos, esos viven en ArchivoEstudio) — research.md #2, #3.
+  estudioItems       Json                @default("[]")
+  /// Incrementado en cada edición; usado para detectar conflictos de sync (research.md #7).
+  version            Int                 @default(1)
+  conflictoPendiente Json?
+  /// `null` mientras está en curso; se completa al finalizar (FR-014).
+  finalizadaEn       DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  archivos           ArchivoEstudio[]
+
+  @@index([pacienteId, estado])
+}
+
+/// Archivo de resultado adjunto a un estudio complementario (005-atencion-paciente,
+/// FR-017 a FR-019) — solo servidor, sin espejo en Dexie (research.md #3, #5). Esta tabla
+/// guarda solo metadata: desde 012-archivos-supabase-storage el contenido binario vive en
+/// Supabase Storage bajo la clave `estudios/{citaId}/{estudioItemId}/{id}`, nunca en
+/// IndexedDB (research.md #14). Es la única escritura de esta feature que ignora el bloqueo
+/// de `Cita.estado = FINALIZADA` (FR-017) y la única que requiere conexión (research.md #5).
+model ArchivoEstudio {
+  id            String             @id @default(uuid())
+  citaId        String
+  cita          Cita               @relation(fields: [citaId], references: [id], onDelete: Cascade)
+  /// Referencia al `id` de un elemento dentro de `Cita.estudioItems` — sin FK de base de
+  /// datos porque `estudioItems` no es una tabla; se valida en la capa de aplicación
+  /// (research.md #3).
+  estudioItemId String
+  nombreArchivo String
+  tipo          TipoArchivoEstudio
+  createdAt     DateTime           @default(now())
+
+  @@index([citaId, estudioItemId])
+}
+
+/// Archivo suelto del paciente (pestaña "Archivos" de la ficha, rediseño visual
+/// posterior a 005/006) — a diferencia de ArchivoEstudio, no cuelga de ninguna Cita ni
+/// Estudio: se sube y se ve desde la ficha directamente. Mismo criterio que ArchivoEstudio
+/// en todo lo demás: solo servidor, sin espejo en Dexie, online-only, y desde
+/// 012-archivos-supabase-storage el contenido binario vive en Supabase Storage bajo la
+/// clave `pacientes/{pacienteId}/{id}` (esta tabla guarda solo metadata). Reutiliza el enum
+/// `TipoArchivoEstudio` (IMAGEN/PDF) — es el mismo concepto, no justifica un enum nuevo.
+model ArchivoPaciente {
+  id            String             @id @default(uuid())
+  pacienteId    String
+  paciente      Paciente           @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  nombreArchivo String
+  tipo          TipoArchivoEstudio
+  /// Tamaño en bytes, calculado al subir. Desde 012-archivos-supabase-storage el binario
+  /// vive en Supabase Storage, no en esta tabla — este campo evita tener que consultar
+  /// Storage solo para mostrar el tamaño en el listado.
+  tamanoBytes   Int
+  createdAt     DateTime           @default(now())
+
+  @@index([pacienteId])
+}
+
+/// Estado bucal actual de un paciente para una Denticion (006-odontograma) — "una sola
+/// foto que se actualiza", no versionada por Cita (data-model.md, research.md #2). Como
+/// máximo una fila por (pacienteId, denticion). `hallazgos` (HallazgoDental[]) va embebido
+/// como Json, mismo criterio que Cita.recetaItems/estudioItems.
+model Odontograma {
+  id                 String                 @id
+  pacienteId         String
+  paciente           Paciente               @relation(fields: [pacienteId], references: [id])
+  denticion          Denticion
+  /// HallazgoDental[] embebido: { id, condicionId, dientes, superficie, variante,
+  /// estadoColor, nota, registradoEn } — ver data-model.md §HallazgoDental. condicionId
+  /// referencia el catálogo estático (CondicionOdontograma.ts), no una tabla.
+  hallazgos          Json                   @default("[]")
+  /// NotaDental[] embebido: { id, diente, superficie, texto, registradoEn } — nota libre
+  /// por contexto de selección, independiente de si hay hallazgos (segunda ronda de
+  /// feedback). Mismo criterio de persistencia que `hallazgos` (array embebido, no tabla
+  /// propia): a lo sumo una nota por (diente, superficie).
+  notas              Json                   @default("[]")
+  version            Int                    @default(1)
+  conflictoPendiente Json?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  cambios            CambioOdontograma[]
+
+  @@unique([pacienteId, denticion])
+}
+
+/// Historial de auditoría append-only de un Odontograma (006-odontograma, FR-009/FR-010,
+/// research.md #3/#4) — tabla propia porque crece sin límite; nunca se edita ni se
+/// elimina, solo se crea (contracts/odontograma-api.md rechaza EDITAR/ELIMINAR con 400).
+/// pacienteId/denticion desnormalizados desde Odontograma para listar sin join
+/// (Principio VIII).
+model CambioOdontograma {
+  id            String                 @id
+  odontogramaId String
+  odontograma   Odontograma            @relation(fields: [odontogramaId], references: [id], onDelete: Cascade)
+  pacienteId    String
+  denticion     Denticion
+  tipoCambio    TipoCambioOdontograma
+  /// Exactamente uno de hallazgoId/notaId está seteado — a qué tipo de entidad se refiere
+  /// este cambio (hallazgo o nota libre).
+  hallazgoId    String?
+  notaId        String?
+  dientes       String[]
+  superficie    Superficie?
+  descripcion   String
+  /// Estado completo del HallazgoDental/NotaDental en el momento de este cambio (según
+  /// cuál de hallazgoId/notaId esté seteado) — `null` en ELIMINADO reciente sin dato
+  /// previo capturado, o en registros de antes de este campo. Permite reconstruir cómo se
+  /// veía el odontograma en cualquier momento pasado sin guardar una fila por fecha
+  /// (rediseño posterior — pestaña Historial).
+  snapshot      Json?
+  registradoEn  DateTime               @default(now())
+
+  @@index([odontogramaId, registradoEn])
+}
+
+/// Línea del plan de tratamiento (006-odontograma, FR-016/FR-017) — reemplaza el campo de
+/// texto libre Cita.planTratamiento (research.md #5). Independiente de Odontograma/
+/// Denticion: `diente` es texto libre opcional, no una FK.
+model ItemPlanTratamiento {
+  id                 String    @id
+  pacienteId         String
+  paciente           Paciente  @relation(fields: [pacienteId], references: [id])
+  fecha              DateTime  @db.Date
+  diente             String?
+  tratamiento        String
+  /// 009-planes-tratamiento: null mientras está pendiente; se completa/vacía únicamente vía
+  /// el checkbox "Realizado" (marcarRealizadoItemPlanTratamiento), nunca a mano.
+  fechaRealizado     DateTime? @db.Date
+  /// 009-planes-tratamiento: texto libre opcional, editable desde la pestaña Planes.
+  nota               String?
+  version            Int       @default(1)
+  conflictoPendiente Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([pacienteId, fecha])
+}

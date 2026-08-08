@@ -1,0 +1,204 @@
+/* position:fixed escapa al flujo normal — el margin-left de `.content` (ShellLayout) no lo
+   alcanza, así que necesita su propio offset sincronizado vía useSidebarColapsada()
+   (docs/design-system.md §6.20). `.colapsada` la aplica TopAppBar.tsx condicionalmente. */
+.topAppBar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  margin-left: 256px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+  transition: margin-left 200ms ease-in-out;
+}
+
+.topAppBar.colapsada {
+  margin-left: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topAppBar {
+    transition: none;
+  }
+}
+
+.left {
+  flex: 1;
+  max-width: 480px;
+}
+
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.searchContainer:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 100, 124, 0.15);
+}
+
+.searchContainer svg {
+  color: var(--color-muted-foreground);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-foreground);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+}
+
+.searchInput::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.iconButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.iconButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-primary);
+}
+
+.notificationDot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #dc2626;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* El <a> de next/link hereda el subrayado/color de enlace del navegador; esa línea se
+   propaga a sus descendientes (el <button> hijo) salvo que el propio <a> la resetee — no
+   alcanza con resetearla solo en .primaryButton. */
+.linkReset {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+}
+
+.primaryButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 var(--space-4);
+  background: var(--color-primary);
+  color: white;
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 100, 124, 0.2);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.primaryButton:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(0, 100, 124, 0.3);
+  transform: translateY(-1px);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.primaryButton span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Tablet: la Sidebar se fuerza a 64px sin importar el colapso manual (Sidebar.module.css) —
+   TopAppBar sigue el mismo criterio acá, ignorando .colapsada en este breakpoint. */
+@media (max-width: 1023px) {
+  .topAppBar,
+  .topAppBar.colapsada {
+    margin-left: 64px;
+  }
+}
+
+/* Mobile: la Sidebar pasa a barra inferior, sin ancho a la izquierda que compensar. */
+@media (max-width: 639px) {
+  .topAppBar,
+  .topAppBar.colapsada {
+    margin-left: 0;
+    padding: 0 var(--space-4);
+  }
+
+  .left {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .searchInput {
+    height: 40px;
+    font-size: var(--font-size-sm);
+  }
+
+  .primaryButton {
+    height: 40px;
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+
+  .right {
+    gap: var(--space-2);
+  }
+
+  .iconButton {
+    width: 36px;
+    height: 36px;
+  }
+}

@@ -1,0 +1,36 @@
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.azul {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.verde {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.amarillo {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.rojo {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}

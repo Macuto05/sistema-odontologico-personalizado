@@ -1,0 +1,47 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-foreground);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-xs);
+}
+
+.default {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-sm);
+}
+
+.lg {
+  width: 64px;
+  height: 64px;
+  font-size: var(--font-size-2xl);
+}
+
+/* Paleta reutilizada de 5 tonos ya existentes — docs/design-system.md §6.9. Los dos
+   primeros usan los tokens semánticos (no los primitivos cyan-*) para seguir el tema de
+   apariencia activo (007-tema-apariencia). */
+.cyan700 {
+  background: var(--color-primary);
+}
+.cyan900 {
+  background: var(--color-primary-active);
+}
+.teal700 {
+  background: var(--color-teal-700);
+}
+.slate500 {
+  background: var(--color-slate-500);
+}
+.slate700 {
+  background: var(--color-slate-700);
+}

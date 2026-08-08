@@ -1,0 +1,80 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms ease-in-out, box-shadow 150ms ease-in-out, transform 150ms ease-in-out;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+}
+
+/* Tamaños — design-system.md §6.1. Default en 44px por el requisito táctil (§4.1). */
+.sm {
+  height: 36px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+}
+.default {
+  height: 44px;
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-base);
+}
+.lg {
+  height: 52px;
+  padding: 0 var(--space-6);
+  font-size: var(--font-size-base);
+}
+
+/* Variantes */
+.primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  box-shadow: 0 2px 8px rgba(0, 100, 124, 0.2);
+}
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(0, 100, 124, 0.3);
+  transform: translateY(-1px);
+}
+.primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+  transform: translateY(0);
+}
+
+.secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+}
+.secondary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
+.outline {
+  background: transparent;
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+}
+.outline:hover:not(:disabled) {
+  background: var(--color-secondary);
+}
+
+.destructive {
+  background: var(--color-error);
+  color: var(--color-error-foreground);
+}
+.destructive:hover:not(:disabled) {
+  opacity: 0.9;
+}

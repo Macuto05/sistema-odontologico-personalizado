@@ -1,0 +1,54 @@
+.pagina {
+  padding: var(--space-6);
+  max-width: 1100px;
+  margin: 64px auto 0; /* espacio para el TopAppBar fijo (§6.20) */
+}
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+}
+
+.tituloBloque {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.titulo {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-foreground);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.aviso {
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 639px) {
+  .pagina {
+    padding: var(--space-4);
+  }
+
+  .encabezado {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .titulo {
+    font-size: var(--font-size-2xl);
+  }
+}

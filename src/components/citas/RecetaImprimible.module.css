@@ -1,0 +1,171 @@
+/* Papelería de marca personal de la odontóloga (su membrete real), no la interfaz del
+   sistema — por eso esta hoja define su propia paleta puntual en vez de reutilizar
+   --color-primary/--color-cyan-* del design system de la app (docs/design-system.md). */
+.hoja {
+  --receta-morado: #905ca2;
+  --receta-gris: #6b6570;
+  --receta-borde: #ded6e2;
+
+  width: 5.5in;
+  margin: 0 auto;
+  /* padding-bottom generoso: reserva el lugar de `.firma` (position:fixed en impresión,
+     ver abajo) para que el contenido nunca quede tapado debajo de ella. */
+  padding: 9mm 9mm 28mm;
+  background: white;
+  color: #262223;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 8mm;
+}
+
+@media print {
+  @page {
+    size: 5.5in 8.5in;
+    margin: 0;
+  }
+}
+
+.membrete {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  padding-bottom: 4mm;
+  border-bottom: 1px solid var(--receta-borde);
+}
+
+.dato {
+  margin: 0;
+  font-size: 11pt;
+}
+
+.datoEtiqueta {
+  font-weight: 700;
+  color: var(--receta-morado);
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5mm;
+}
+
+.titulo,
+.tituloRx {
+  margin: 0;
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--receta-morado);
+  padding-bottom: 1.5mm;
+  border-bottom: 1px solid var(--receta-borde);
+}
+
+.simboloRx {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 14pt;
+}
+
+.vacio {
+  margin: 0;
+  font-size: 10pt;
+  color: var(--receta-gris);
+}
+
+.medicamentos {
+  margin: 0;
+  padding-left: 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+}
+
+.medicamentos li {
+  padding-left: 1mm;
+}
+
+.medicamentoNombre {
+  margin: 0;
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+.medicamentoDetalle {
+  margin: 1mm 0 0;
+  font-size: 10pt;
+  color: var(--receta-gris);
+}
+
+.estudios {
+  margin: 0;
+  padding-left: 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  font-size: 10.5pt;
+}
+
+/* Posición fija (no `margin-top: auto` empujada al fondo de un contenedor de altura
+   mínima 8.5in): eso hacía que, apenas el contenido real ocupaba más que un resto chico
+   de la hoja, el total se pasara del alto físico de la página y la firma terminara sola
+   en una segunda hoja (feedback directo). Con `position: fixed` en impresión, la firma
+   siempre cae en el mismo lugar del pie de página — si el contenido llegara a necesitar
+   una segunda hoja igual, la firma se repite ahí en la misma posición, no queda flotando
+   a mitad de página según cuántos ítems haya. */
+.firma {
+  text-align: center;
+}
+
+@media print {
+  .firma {
+    position: fixed;
+    left: 9mm;
+    right: 9mm;
+    bottom: 10mm;
+  }
+}
+
+.lineaFirma {
+  border-top: 1px solid #262223;
+  width: 65mm;
+  margin: 0 auto 2mm;
+}
+
+.firma p {
+  margin: 0;
+  font-size: 9pt;
+  color: var(--receta-gris);
+}
+
+.firma .contacto {
+  margin-top: 2mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2mm;
+  font-size: 8pt;
+}
+
+.iconoTelefono {
+  color: var(--receta-morado);
+  flex-shrink: 0;
+}
+
+.iconoInstagram {
+  width: 9pt;
+  height: 9pt;
+  flex-shrink: 0;
+}
+
+.separadorContacto {
+  color: var(--receta-borde);
+  margin: 0 0.5mm;
+}
