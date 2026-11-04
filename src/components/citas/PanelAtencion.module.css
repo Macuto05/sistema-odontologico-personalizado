@@ -131,7 +131,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  flex-shrink: 0;
+  /* Antes flex-shrink:0 — en celular un nombre largo ("Paciente Prueba Odontograma") no
+     cabía en 393px, empujaba la página a 492px de ancho y el teléfono la alejaba y la dejaba
+     arrastrar de costado (en la pestaña Odontograma eso además se "robaba" el gesto de
+     scroll de los dientes). Como .hero ya hace wrap, en escritorio el bloque baja de línea
+     antes de achicarse; solo se angosta si ni en su propia línea entra. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.heroIdentidad h1 {
+  overflow-wrap: anywhere;
 }
 
 /* Resumen de historia clínica al lado del nombre — antes era espacio vacío. Una fila por
@@ -250,7 +260,12 @@
    timing que el colapso de la Sidebar izquierda, a pedido de la odontóloga ("probemos si se
    siente mejor así que sobrepuesto"). Siempre montado, oculto con `translateX` — así el
    deslizamiento se puede animar (con `display:none`/desmontar no habría transición). */
-.panelHistorial {
+/* Carril fijo del tamaño del panel abierto que recorta el panel cerrado (corrido con
+   translateX fuera de pantalla). Sin este recorte, el panel cerrado seguía contando como
+   contenido de la página: en celular la ensanchaba (393 → 492px), el navegador la alejaba
+   y se podía arrastrar la página entera de costado. pointer-events:none para no bloquear
+   clics en el área que ocupa mientras el panel está cerrado. */
+.carrilHistorial {
   position: fixed;
   top: 64px; /* debajo de .topbar, nunca la tapa */
   right: 0;
@@ -258,6 +273,14 @@
   width: 360px;
   max-width: calc(100vw - var(--space-6));
   z-index: 18;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.panelHistorial {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   background: var(--color-card);
@@ -322,10 +345,14 @@
 }
 
 @media (max-width: 639px) {
-  .panelHistorial {
+  .carrilHistorial {
     top: 0;
     width: 100%;
     max-width: none;
+    /* Pantalla completa en celular: por encima del indicador de sincronización flotante
+       (SyncStatusPill, z-index 21), que si no tapaba justo la "×" de cerrar (arriba a la
+       derecha) y el toque no cerraba el panel. */
+    z-index: 22;
   }
 
   /* En celular el panel ya ocupa el 100% del ancho — empujar el contenido no tiene sentido

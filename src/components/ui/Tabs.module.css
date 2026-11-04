@@ -6,6 +6,15 @@
   border-radius: var(--radius-lg);
   padding: var(--space-1);
   box-shadow: var(--shadow-sm);
+  /* Mismo criterio que .contenedorSubrayado: si las pestañas no entran (Panel de Atención en
+     celular), scrollean acá adentro en vez de ensanchar la página. Antes la página medía
+     444px en un teléfono de 393px — el navegador la alejaba y el gesto de arrastre movía la
+     página entera en vez del diagrama del Odontograma. overflow-y:hidden evita la scrollbar
+     vertical que el navegador agrega al no poder dejar overflow-y en "visible". */
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .tab {
@@ -15,6 +24,9 @@
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-4);
   min-height: 44px;
+  /* Sin comprimir ni partir el texto: con overflow-x:auto en .contenedor, el exceso scrollea. */
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);

@@ -15,11 +15,6 @@
 
 .arcada {
   display: flex;
-  /* Centrada, no flex-start — con el panel de herramientas ahora arriba (no al costado)
-     sobra ancho a los dos lados y los dientes quedaban pegados a la izquierda (feedback
-     directo de la odontóloga). Si la fila no entra, overflow-x:auto de .diagrama sigue
-     scrolleando igual, centrado no le cambia nada a ese caso. */
-  justify-content: center;
 }
 
 /* Ancho natural (nunca estirada por el centrado del padre) — ver el comentario en
@@ -30,6 +25,14 @@
   gap: 5px;
   flex-wrap: nowrap;
   flex-shrink: 0;
+  /* Centrada cuando sobra ancho (con el panel de herramientas arriba, los dientes quedaban
+     pegados a la izquierda — feedback de la odontóloga). Con margin auto, NO con
+     `justify-content: center` en .arcada: ese centrado, cuando la fila es más ancha que el
+     contenedor (celular), la desborda por los DOS lados y el desborde izquierdo es
+     inalcanzable con scroll — en un teléfono los dientes 18–13 / 48–43 nunca se podían ver
+     (bug reportado desde Samsung A56 e iPhone). Los márgenes auto valen 0 cuando no sobra
+     espacio, así que la fila arranca en el borde y el scroll cubre toda la arcada. */
+  margin-inline: auto;
 }
 
 .inferior {

@@ -226,7 +226,10 @@ export function PanelAtencion({ citaId, paciente }: PanelAtencionProps) {
            `Modal`), y solo se cierra con su propia "×" o el toggle, nunca solo. Empuja el
            contenido (como la sidebar izquierda) en vez de flotar encima — siempre montado
            (no condicional) para que el deslizamiento con `transform` se pueda animar; oculto
-           del lado derecho vía `translateX` y `aria-hidden` cuando está cerrado. */}
+           del lado derecho vía `translateX` y `aria-hidden` cuando está cerrado. El carril
+           recorta el panel cerrado: sin él, el panel corrido fuera de pantalla ensanchaba la
+           página en celular (el teléfono la alejaba y dejaba arrastrarla de costado). */}
+        <div className={styles.carrilHistorial}>
         <aside
           className={`${styles.panelHistorial} ${historialAbierto ? styles.panelHistorialAbierto : ""}`}
           aria-label="Antecedentes e historial"
@@ -248,6 +251,7 @@ export function PanelAtencion({ citaId, paciente }: PanelAtencionProps) {
             <Accordion secciones={seccionesLaterales} abiertosPorDefecto={[]} />
           </div>
         </aside>
+        </div>
 
         <Modal
           abierto={confirmandoFinalizar}
