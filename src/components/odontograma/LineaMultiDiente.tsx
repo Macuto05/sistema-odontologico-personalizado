@@ -9,8 +9,8 @@ interface LineaMultiDienteProps {
   color: "ROJO" | "AZUL";
 }
 
-/** Ancho de cada columna .diente + el gap de .arcada — ver DienteSvg.module.css (.diente
- * { width: 52px }) y DiagramaBoca.module.css (.arcada { gap: 5px }). Coordenadas por
+/** Ancho de cada columna .diente + el gap de .fila — ver DienteSvg.module.css (.diente
+ * { width: 52px }) y DiagramaBoca.module.css (.fila { gap: 5px }). Coordenadas por
  * índice, no medición de DOM: robusto frente a scroll/timing y atraviesa los espacios
  * entre dientes con una sola línea recta (Parte C del plan). Escala 1.25x sobre los
  * valores originales (46/20/27) — diagrama agrandado para mejorar el toque en celular. */

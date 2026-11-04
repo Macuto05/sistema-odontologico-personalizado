@@ -8,6 +8,9 @@
      chica para tocar con el dedo en celular (feedback directo de la odontóloga). Ver
      LineaMultiDiente.tsx (ANCHO_COLUMNA) y DiagramaBoca.tsx (overlay) para las constantes
      que dependen de este mismo ancho. */
+  /* NO agrandar sin revisar el espacio: con la barra lateral (256px) + paddings, en una
+     laptop de 1280px quedan ~912px = 16 * 57 exactos para la fila. La cruz (.cruz) creció
+     hasta casi todo este ancho en vez de agrandar la columna. */
   width: 52px;
   /* Sin esto, un contenedor `.arcada` angosto (menos de 32*57px) comprime cada diente por
      debajo de estos 52px (flex-shrink:1 es el default) — el overlay de líneas multi-diente
@@ -98,14 +101,18 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  width: 38px;
-  height: 38px;
+  /* 38 → 50px (feedback de la odontóloga: "los recuadros de abajo están muy pequeños") —
+     casi todo el ancho de la columna (.diente, 52px) para no ensanchar la fila. */
+  width: 50px;
+  height: 50px;
   border: 1px solid var(--color-border);
   gap: 1px;
   background: var(--color-border);
 }
 
 .celda {
+  /* relative: los hallazgos (RellenoSuperficie) son capas absolutas que cubren la celda. */
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +134,11 @@
 
 .celda.seleccionado {
   background: color-mix(in srgb, var(--color-primary-accent) 20%, var(--color-card));
-  box-shadow: inset 0 0 0 2px var(--color-primary-accent);
+  /* outline en vez de box-shadow inset: la celda puede estar pintada entera por un
+     hallazgo (capa absoluta encima), y el inset quedaría tapado. */
+  outline: 2px solid var(--color-primary-accent);
+  outline-offset: -2px;
+  z-index: 1;
 }
 
 .arriba {

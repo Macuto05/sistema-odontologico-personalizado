@@ -4,6 +4,7 @@ import { HallazgoDental, Superficie } from "@/domain/entities/Odontograma";
 import { buscarCondicion } from "@/domain/entities/CondicionOdontograma";
 import { SimboloHallazgo, esSimboloCoronaCompleta, esSimboloRaizCompleta } from "./simboloUtils";
 import { CONTORNO_CORONA, CONTORNO_CORONA_VIEWBOX } from "./contornoDiente";
+import { RellenoSuperficie } from "./RellenoSuperficie";
 import styles from "./DienteSvg.module.css";
 
 interface DienteSvgProps {
@@ -104,7 +105,7 @@ export function DienteSvg({
             aria-pressed={superficieSeleccionada === superficie}
           >
             {(hallazgosPorSuperficie[superficie] ?? []).map((h, i) => (
-              <SimboloHallazgo key={`${h.id}-${i}`} hallazgo={h} />
+              <RellenoSuperficie key={`${h.id}-${i}`} hallazgo={h} />
             ))}
           </button>
         ))}
