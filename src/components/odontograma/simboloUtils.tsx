@@ -6,6 +6,7 @@ import { SimboloCirculo } from "./SimboloCirculo";
 import { SimboloCirculoDoble } from "./SimboloCirculoDoble";
 import { SimboloCorona } from "./SimboloCorona";
 import { SimboloLineaVertical } from "./SimboloLineaVertical";
+import { SimboloXCompleta } from "./SimboloXCompleta";
 
 type Escala = "completo" | "chico";
 
@@ -39,6 +40,9 @@ function renderSimbolo(
       if (simbolo.variante === "LINEA_VERTICAL") {
         return <SimboloLineaVertical color={color} escala={escala} />;
       }
+      if (simbolo.variante === "X" && escala === "completo") {
+        return <SimboloXCompleta color={color} />;
+      }
       return <SimboloGrafico variante={simbolo.variante} color={color} />;
     case "CIRCULO":
       return <SimboloCirculo color={color} relleno={simbolo.relleno} />;
@@ -71,7 +75,11 @@ function renderSimbolo(
 export function esSimboloCoronaCompleta(condicion: CondicionOdontograma): boolean {
   return (
     condicion.simbolo.tipo === "CORONA" ||
-    (condicion.simbolo.tipo === "GRAFICO" && condicion.simbolo.variante === "LINEA_VERTICAL")
+    (condicion.simbolo.tipo === "GRAFICO" &&
+      // "X" (Ausente, Por extraer) cruza toda la corona — feedback de la odontóloga, con
+      // el odontograma clásico de referencia donde la X tacha el diente entero. "X_RAIZ"
+      // (Resto radicular) NO: sigue sobre la raíz (ver esSimboloRaizCompleta).
+      (condicion.simbolo.variante === "LINEA_VERTICAL" || condicion.simbolo.variante === "X"))
   );
 }
 
