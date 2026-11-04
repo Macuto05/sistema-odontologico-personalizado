@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/infrastructure/db/dexie/db";
@@ -17,6 +17,8 @@ import { crearItemPlanTratamiento } from "@/application/use-cases/crearItemPlanT
 import { editarItemPlanTratamiento } from "@/application/use-cases/editarItemPlanTratamiento";
 import { eliminarItemPlanTratamiento } from "@/application/use-cases/eliminarItemPlanTratamiento";
 import { Denticion, HallazgoDental, NotaDental, Odontograma } from "@/domain/entities/Odontograma";
+import { rebasarBorrador } from "@/domain/entities/fusionOdontograma";
+import { traerOdontogramasDelPaciente } from "@/infrastructure/sync/syncEngine";
 import { ItemPlanTratamiento } from "@/domain/entities/ItemPlanTratamiento";
 import { Paciente, puedeEditarse } from "@/domain/entities/Paciente";
 import {
@@ -98,6 +100,8 @@ function borradorDesde(o: Odontograma): BorradorOdontograma {
   return { hallazgos: o.hallazgos, notas: o.notas };
 }
 
+const BORRADOR_VACIO: BorradorOdontograma = { hallazgos: [], notas: [] };
+
 /** true si el borrador de una dentición difiere de lo último guardado — insensible al
  * orden en que se tocaron los campos, solo importa el contenido final. */
 function borradorDifiereDeLoGuardado(
@@ -163,11 +167,34 @@ export function OdontogramaTab({
   // necesita, sin ninguna acción explícita del usuario. Ambas denticiones a la vez (no solo
   // la activa) — el borrador de la que no se está viendo también necesita su base real para
   // poder compararse y guardarse junto con la otra. No aplica si está archivado.
+  //
+  // Antes de crear, se trae del servidor lo que ya exista para este paciente (si hay
+  // conexión, con timeout): sin esto, en un dispositivo donde el pull global todavía no trajo
+  // el odontograma, se creaba un duplicado vacío con otro id — se veía el diagrama vacío en vez
+  // de los hallazgos reales y la sincronización se trababa (ver `guardarOdontogramaRemoto`,
+  // que de todos modos reconcilia un duplicado si llega a crearse offline). En solo lectura
+  // no se crea nada, pero sí se trae del servidor para mostrar lo que haya.
+  const [listoParaMostrar, setListoParaMostrar] = useState(false);
   useEffect(() => {
-    if (soloLectura) return;
-    for (const d of DENTICIONES) {
-      void obtenerOCrearOdontograma(odontogramaRepo, { id: uuid(), pacienteId, denticion: d });
-    }
+    let cancelado = false;
+    setListoParaMostrar(false);
+    void (async () => {
+      await traerOdontogramasDelPaciente(pacienteId);
+      if (cancelado) return;
+      if (!soloLectura) {
+        for (const d of DENTICIONES) {
+          try {
+            await obtenerOCrearOdontograma(odontogramaRepo, { id: uuid(), pacienteId, denticion: d });
+          } catch (err) {
+            console.error("[odontograma] no se pudo crear/abrir", d, err);
+          }
+        }
+      }
+      if (!cancelado) setListoParaMostrar(true);
+    })();
+    return () => {
+      cancelado = true;
+    };
   }, [pacienteId, soloLectura]);
 
   const resultadoAdulto = useLiveQuery(
@@ -199,17 +226,36 @@ export function OdontogramaTab({
   // está editando sin guardar, nada de esto se dispara: el borrador solo cambia por acción
   // del propio odontólogo. Efecto separado por dentición para no pisar el borrador de la
   // que no cambió cuando la otra sí se guarda.
+  //
+  // Si la base cambia mientras hay un borrador (sync del servidor, o reconciliación de un
+  // duplicado que cambia el id), los cambios sin guardar se REAPLICAN encima de la base nueva
+  // (`rebasarBorrador`) en vez de pisarse: antes se perdía en silencio lo marcado sin guardar.
+  // Tras un "Guardar cambios" el borrador ya coincide con la base nueva y el rebase es neutro.
+  const basesBorrador = useRef<BorradoresPorDenticion>({ ADULTO: null, NINO: null });
+  function sincronizarBorrador(d: Denticion, guardado: Odontograma | undefined) {
+    if (!guardado) return;
+    const nuevaBase = borradorDesde(guardado);
+    const baseAnterior = basesBorrador.current[d];
+    basesBorrador.current = { ...basesBorrador.current, [d]: nuevaBase };
+    setBorradores((actual) => {
+      const borradorActual = actual[d];
+      return {
+        ...actual,
+        [d]:
+          borradorActual && baseAnterior
+            ? rebasarBorrador(baseAnterior, borradorActual, nuevaBase)
+            : nuevaBase,
+      };
+    });
+  }
+
   useEffect(() => {
-    if (odontogramaAdulto) {
-      setBorradores((actual) => ({ ...actual, ADULTO: borradorDesde(odontogramaAdulto) }));
-    }
+    sincronizarBorrador("ADULTO", odontogramaAdulto);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [odontogramaAdulto?.id, odontogramaAdulto?.version]);
 
   useEffect(() => {
-    if (odontogramaNino) {
-      setBorradores((actual) => ({ ...actual, NINO: borradorDesde(odontogramaNino) }));
-    }
+    sincronizarBorrador("NINO", odontogramaNino);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [odontogramaNino?.id, odontogramaNino?.version]);
 
@@ -264,7 +310,14 @@ export function OdontogramaTab({
   const dientesSuperior = denticion === "ADULTO" ? DIENTES_ADULTO_SUPERIOR : DIENTES_NINO_SUPERIOR;
   const dientesInferior = denticion === "ADULTO" ? DIENTES_ADULTO_INFERIOR : DIENTES_NINO_INFERIOR;
 
-  const borrador = borradores[denticion];
+  // Un paciente sin odontograma de esta dentición simplemente no tiene hallazgos: en solo
+  // lectura (ficha del paciente, sin "Editar") no se crea ninguno, así que antes `borrador`
+  // quedaba null para siempre y la pantalla se clavaba en "Cargando…" (reportado por la
+  // odontóloga). Una vez resuelta la consulta local y el intento de traerlo del servidor, se
+  // muestra el diagrama vacío.
+  const borrador =
+    borradores[denticion] ??
+    (soloLectura && !cargando && !odontograma && listoParaMostrar ? BORRADOR_VACIO : null);
 
   function hallazgosEnContexto(ctx: SeleccionDiente | null): HallazgoDental[] {
     if (!ctx || !borrador) return [];

@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import {
   db,
   CLAVE_ULTIMA_SINCRONIZACION,
@@ -10,6 +11,7 @@ import {
 } from "../db/dexie/db";
 import {
   contarOperacionesPendientes,
+  encolarOperacion,
   hayOperacionesPendientes,
   marcarConflicto,
   marcarEnviando,
@@ -22,6 +24,7 @@ import { Paciente } from "@/domain/entities/Paciente";
 import { Consultorio } from "@/domain/entities/Consultorio";
 import { Cita } from "@/domain/entities/Cita";
 import { Odontograma } from "@/domain/entities/Odontograma";
+import { fusionarContenidoDuplicado } from "@/domain/entities/fusionOdontograma";
 import { CambioOdontograma } from "@/domain/entities/CambioOdontograma";
 import { ItemPlanTratamiento } from "@/domain/entities/ItemPlanTratamiento";
 import { Insumo } from "@/domain/entities/Insumo";
@@ -87,12 +90,18 @@ export async function sincronizarLote(): Promise<number> {
 
     const { resultados }: { resultados: ResultadoSyncApi[] } = await respuesta.json();
 
+    // Los Odontogramas se guardan DESPUÉS de marcar el estado de todas las operaciones del
+    // lote: si uno resulta ser el del servidor para un duplicado local, la reconciliación
+    // reasigna/descarta operaciones de ese duplicado que pueden venir en este mismo lote —
+    // hacerlo antes dejaría que el `marcarConflicto` de abajo las volviera a pisar.
+    const odontogramasRecibidos: Odontograma[] = [];
+
     for (const resultado of resultados) {
       if (resultado.paciente) await db.pacientes.put(resultado.paciente);
       if (resultado.consultorio) await db.consultorios.put(resultado.consultorio);
       if (resultado.consultorioEliminadoId) await db.consultorios.delete(resultado.consultorioEliminadoId);
       if (resultado.cita) await db.citas.put(resultado.cita);
-      if (resultado.odontograma) await db.odontogramas.put(resultado.odontograma);
+      if (resultado.odontograma) odontogramasRecibidos.push(resultado.odontograma);
       if (resultado.cambioOdontograma) {
         await db.cambiosOdontograma.put(resultado.cambioOdontograma);
       }
@@ -110,6 +119,8 @@ export async function sincronizarLote(): Promise<number> {
         await marcarConflicto(resultado.id);
       }
     }
+
+    for (const odontograma of odontogramasRecibidos) await guardarOdontogramaRemoto(odontograma);
 
     return resultados.length;
   } catch {
@@ -308,12 +319,118 @@ export async function pullCitasDesdeServidor(): Promise<void> {
   await db.metaSync.put({ clave: CLAVE_ULTIMA_SINCRONIZACION_CITAS, valor: inicioDeEsteCiclo });
 }
 
+/**
+ * Guarda en el espejo local un Odontograma que vino del servidor, reconciliándolo si este
+ * dispositivo tiene un DUPLICADO: otro Odontograma con el mismo paciente + dentición pero
+ * distinto id. Ese duplicado aparece cuando se abre un odontograma antes de que el pull
+ * haya traído el del servidor — `obtenerOCrear` no lo encuentra localmente y crea uno vacío
+ * con id nuevo. Antes de esto, `put(remoto)` violaba el índice único
+ * `&[pacienteId+denticion]` (DexieError): el lote entero volvía a PENDIENTE y se reenviaba
+ * para siempre ("Sincronizando…" sin fin, nada más subía desde ese dispositivo) y el
+ * odontograma real del servidor nunca se veía en él.
+ *
+ * Reconciliación (en una sola transacción): el del servidor reemplaza al duplicado; si el
+ * duplicado tenía hallazgos/notas marcados en este dispositivo, se fusionan con los del
+ * servidor (`fusionarContenidoDuplicado` — no se pierde nada) y se encola un EDITAR sobre el
+ * id real para subirlos; las operaciones del duplicado se descartan (su contenido ya está en
+ * la fusión) y su historial de cambios se reasigna al id real.
+ */
+export async function guardarOdontogramaRemoto(remoto: Odontograma): Promise<void> {
+  await db.transaction("rw", [db.odontogramas, db.outboxOperations, db.cambiosOdontograma], async () => {
+    const duplicado = await db.odontogramas
+      .where("[pacienteId+denticion]")
+      .equals([remoto.pacienteId, remoto.denticion])
+      .first();
+    if (!duplicado || duplicado.id === remoto.id) {
+      await db.odontogramas.put(remoto);
+      return;
+    }
+
+    const opsDuplicado = await db.outboxOperations
+      .where("entidadId")
+      .equals(duplicado.id)
+      .and((op) => op.entidad === "ODONTOGRAMA")
+      .primaryKeys();
+    await db.outboxOperations.bulkDelete(opsDuplicado);
+    await db.odontogramas.delete(duplicado.id);
+
+    const teniaContenido = duplicado.hallazgos.length > 0 || duplicado.notas.length > 0;
+    if (!teniaContenido) {
+      await db.odontogramas.put(remoto);
+    } else {
+      const fusion = fusionarContenidoDuplicado(remoto, duplicado);
+      const fusionado: Odontograma = {
+        ...remoto,
+        ...fusion,
+        version: remoto.version + 1,
+        updatedAt: new Date().toISOString(),
+      };
+      await db.odontogramas.put(fusionado);
+      await encolarOperacion("ODONTOGRAMA", remoto.id, "EDITAR", fusionado, remoto.version);
+    }
+
+    // Historial: los cambios registrados contra el duplicado pasan al id real, y las
+    // operaciones de CambioOdontograma que todavía no subieron (o que el servidor rechazó
+    // por apuntar a un odontograma inexistente) se reencolan con el id corregido. Con un id
+    // de operación NUEVO: el servidor guarda el resultado de cada id de operación
+    // (OperacionSincronizada, idempotencia) y a un reintento con el mismo id le devuelve el
+    // rechazo ya guardado sin volver a mirarlo.
+    await db.cambiosOdontograma
+      .where("odontogramaId")
+      .equals(duplicado.id)
+      .modify({ odontogramaId: remoto.id });
+    const opsCambios = await db.outboxOperations
+      .filter(
+        (op) =>
+          op.entidad === "CAMBIO_ODONTOGRAMA" &&
+          (op.payload as { odontogramaId?: string } | null)?.odontogramaId === duplicado.id,
+      )
+      .toArray();
+    await db.outboxOperations.bulkDelete(opsCambios.map((op) => op.id));
+    await db.outboxOperations.bulkAdd(
+      opsCambios.map((op) => ({
+        ...op,
+        id: uuid(),
+        payload: { ...(op.payload as object), odontogramaId: remoto.id },
+        estado: "PENDIENTE" as const,
+      })),
+    );
+  });
+}
+
+/** Trae del servidor los Odontogramas de UN paciente y los aplica con el mismo criterio que
+ * el pull global — usado al abrir un odontograma con conexión, ANTES de crear uno vacío,
+ * para no fabricar un duplicado de uno que ya existe en el servidor pero que el pull global
+ * todavía no trajo (en un dispositivo nuevo o recién logueado eso es lo normal). Falla en
+ * silencio (sin conexión, timeout): en ese caso se sigue con lo que haya localmente, y si se
+ * llega a crear un duplicado, `guardarOdontogramaRemoto` lo reconcilia en la próxima sync. */
+// 10s y no menos: en un dispositivo recién logueado esta consulta compite con toda la sync
+// inicial (push + 7 pulls) y en pruebas tardó más de 5s. Mejor esperar un poco que mostrar un
+// diagrama vacío a un paciente que sí tiene hallazgos (la odontóloga podría volver a marcarlos);
+// si igual se agota, la reconciliación de duplicados lo corrige en la próxima sync.
+export async function traerOdontogramasDelPaciente(pacienteId: string, timeoutMs = 10_000): Promise<void> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  const control = new AbortController();
+  const temporizador = setTimeout(() => control.abort(), timeoutMs);
+  try {
+    const respuesta = await fetch(`/api/patients/${pacienteId}/odontogramas`, { signal: control.signal });
+    if (!respuesta.ok) return;
+    const { odontogramas }: { odontogramas: Odontograma[] } = await respuesta.json();
+    await aplicarPaginaRemotaOdontogramas(odontogramas);
+  } catch {
+    // sin conexión / timeout / abortado — se sigue con lo local
+  } finally {
+    clearTimeout(temporizador);
+  }
+}
+
 /** Mismo criterio que `aplicarPaginaRemotaCitas` — no pisa una edición local pendiente. */
 async function aplicarPaginaRemotaOdontogramas(odontogramas: Odontograma[]): Promise<void> {
   for (const remoto of odontogramas) {
     const local = await db.odontogramas.get(remoto.id);
     if (!local) {
-      await db.odontogramas.put(remoto);
+      // Puede existir un duplicado local con otro id (mismo paciente + dentición).
+      await guardarOdontogramaRemoto(remoto);
       continue;
     }
 
