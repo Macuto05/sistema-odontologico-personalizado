@@ -12,9 +12,19 @@ export interface SeleccionDiente {
   superficie: Superficie | null;
 }
 
+/** Una fila del diagrama (una arcada de una dentición). `inferior` marca el comienzo de la
+ * mitad de abajo — la primera fila con `inferior` lleva la línea divisoria punteada. */
+export interface FilaDiagrama {
+  dientes: string[];
+  inferior: boolean;
+}
+
 interface DiagramaBocaProps {
-  dientesSuperior: string[];
-  dientesInferior: string[];
+  /** Filas de arriba hacia abajo — odontograma unificado: adulto superior, niño superior,
+   * niño inferior, adulto inferior (las de niño se pueden ocultar). Las filas más cortas se
+   * centran bajo la más larga, así el 55 cae bajo el 15 y el 65 bajo el 25, como en el
+   * odontograma clásico de referencia de la odontóloga. */
+  filas: FilaDiagrama[];
   hallazgos: HallazgoDental[];
   seleccion: SeleccionDiente | null;
   onClickDiente: (diente: string) => void;
@@ -26,11 +36,9 @@ function esTramo(hallazgo: HallazgoDental): boolean {
   return condicion?.estiloMultiDiente === "TRAMO";
 }
 
-/** Arcada superior e inferior — un DienteSvg por número de la dentición activa (FR-001,
- * FR-002). */
+/** Un DienteSvg por número de cada fila (FR-001, FR-002). */
 export function DiagramaBoca({
-  dientesSuperior,
-  dientesInferior,
+  filas,
   hallazgos,
   seleccion,
   onClickDiente,
@@ -98,10 +106,22 @@ export function DiagramaBoca({
     );
   }
 
+  const primeraInferior = filas.findIndex((f) => f.inferior);
   return (
     <div className={styles.diagrama}>
-      <div className={styles.arcada}>{renderArcada(dientesSuperior)}</div>
-      <div className={`${styles.arcada} ${styles.inferior}`}>{renderArcada(dientesInferior)}</div>
+      {/* Contenedor de ancho natural (el de la fila más larga): centra las filas cortas
+          RELATIVAS a la de adulto y no al área visible — si no, en celular (con scroll) la
+          fila de niño quedaría pegada al borde en vez de alineada bajo los dientes 15–25. */}
+      <div className={styles.contenido}>
+        {filas.map((fila, i) => (
+          <div
+            key={fila.dientes[0] ?? i}
+            className={`${styles.arcada} ${i === primeraInferior ? styles.inferior : ""}`}
+          >
+            {renderArcada(fila.dientes)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

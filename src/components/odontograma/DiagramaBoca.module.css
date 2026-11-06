@@ -13,6 +13,19 @@
   max-width: 100%;
 }
 
+/* Ancho natural = el de la fila más larga (adulto, 16 dientes). Centrado con margin auto
+   (no justify-content, ver .fila) para que en celular, cuando no entra, arranque en el borde
+   y el scroll llegue a todos los dientes. Las filas se apilan con su propio gap — más
+   chico que el de antes entre las 2 arcadas, porque ahora pueden ser 4 filas (odontograma
+   unificado) y no se quiere un diagrama altísimo. */
+.contenido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  width: max-content;
+  margin-inline: auto;
+}
+
 .arcada {
   display: flex;
 }
@@ -38,6 +51,7 @@
 .inferior {
   border-top: 1px dashed var(--color-border);
   padding-top: var(--space-4, 16px);
+  margin-top: var(--space-2, 8px);
 }
 
 /* Línea continua de condiciones "TRAMO" (Puente fijo, Edentulismo, Prótesis removible) —

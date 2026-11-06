@@ -4,6 +4,7 @@ import {
   catalogoParaDenticion,
   DIENTES_ADULTO,
   DIENTES_NINO,
+  denticionDeDiente,
 } from "@/domain/entities/CondicionOdontograma";
 
 describe("catalogoParaDenticion (US2, FR-012)", () => {
@@ -31,5 +32,16 @@ describe("catalogoParaDenticion (US2, FR-012)", () => {
   it("la numeración FDI tiene 32 piezas para Adulto y 20 para Niño (research.md #7)", () => {
     expect(DIENTES_ADULTO).toHaveLength(32);
     expect(DIENTES_NINO).toHaveLength(20);
+  });
+});
+
+describe("denticionDeDiente (odontograma unificado)", () => {
+  it("todos los dientes de adulto resuelven a ADULTO y los de niño a NINO", () => {
+    for (const d of DIENTES_ADULTO) expect(denticionDeDiente(d)).toBe("ADULTO");
+    for (const d of DIENTES_NINO) expect(denticionDeDiente(d)).toBe("NINO");
+  });
+
+  it("ningún número se repite entre ambas denticiones", () => {
+    expect(DIENTES_ADULTO.filter((d) => DIENTES_NINO.includes(d))).toEqual([]);
   });
 });

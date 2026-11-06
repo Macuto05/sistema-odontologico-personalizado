@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/infrastructure/db/dexie/db";
 import {
+  CambioOdontograma,
   reconstruirHallazgosAlMomento,
   reconstruirNotasAlMomento,
 } from "@/domain/entities/CambioOdontograma";
+import { HallazgoDental, NotaDental } from "@/domain/entities/Odontograma";
 import { buscarCondicion } from "@/domain/entities/CondicionOdontograma";
 import { formatearSoloFecha } from "@/components/pacientes/formatearFecha";
-import { DiagramaBoca, SeleccionDiente } from "./DiagramaBoca";
+import { DiagramaBoca, FilaDiagrama, SeleccionDiente } from "./DiagramaBoca";
 import { LeyendaOdontograma } from "./LeyendaOdontograma";
 import { SimboloHallazgo } from "./simboloUtils";
 import { Button } from "@/components/ui/Button";
@@ -18,9 +20,11 @@ import panelStyles from "./PanelHerramientas.module.css";
 import styles from "./HistorialOdontogramaTab.module.css";
 
 interface HistorialOdontogramaTabProps {
-  odontogramaId: string | null;
-  dientesSuperior: string[];
-  dientesInferior: string[];
+  /** Odontogramas del paciente (adulto y/o niño) — el diagrama es unificado, así que cada
+   * uno se reconstruye por separado (cada dentición tiene sus propios checkpoints) y se
+   * muestran juntos. */
+  odontogramaIds: string[];
+  filas: FilaDiagrama[];
 }
 
 // Mismo mapa que PanelHerramientas.tsx (no exportado desde ahí) — duplicado local, igual
@@ -58,45 +62,46 @@ function formatearVariante(variante: string): string {
  * salte al cambiar de "Actual" a "Historial" (feedback directo: ese salto de altura se sentía
  * como un parpadeo que corría el diagrama).
  */
-export function HistorialOdontogramaTab({
-  odontogramaId,
-  dientesSuperior,
-  dientesInferior,
-}: HistorialOdontogramaTabProps) {
+export function HistorialOdontogramaTab({ odontogramaIds, filas }: HistorialOdontogramaTabProps) {
   const [seleccion, setSeleccion] = useState<SeleccionDiente | null>(null);
   const [leyendaAbierta, setLeyendaAbierta] = useState(false);
+  const claveIds = odontogramaIds.join(",");
 
   const cambios = useLiveQuery(async () => {
-    if (!odontogramaId) return [];
-    const todos = await db.cambiosOdontograma.where("odontogramaId").equals(odontogramaId).toArray();
+    if (odontogramaIds.length === 0) return [];
+    const todos = await db.cambiosOdontograma.where("odontogramaId").anyOf(odontogramaIds).toArray();
     return todos.sort((a, b) => b.registradoEn.localeCompare(a.registradoEn));
-  }, [odontogramaId]);
+  }, [claveIds]);
 
-  // Cambiar de dentición (odontogramaId distinto) invalida la selección en curso — el diente
-  // seleccionado pertenece al diagrama anterior.
+  // Cambiar de paciente (otros odontogramas) invalida la selección en curso.
   useEffect(() => {
     setSeleccion(null);
-  }, [odontogramaId]);
+  }, [claveIds]);
 
-  const checkpoints = useMemo(
-    () => cambios?.filter((c) => c.tipoCambio === "CHECKPOINT") ?? [],
-    [cambios],
-  );
-  const ultimoCheckpoint = checkpoints[0] ?? null;
-  // Momento a reconstruir: justo antes del último checkpoint — el `registradoEn` del
-  // checkpoint cronológicamente anterior a ese (si existe), o "" (reconstruye vacío) si el
-  // último checkpoint es el único que hay.
-  const momento = checkpoints[1]?.registradoEn ?? "";
-
-  const hallazgosReconstruidos = useMemo(() => {
-    if (!cambios || !ultimoCheckpoint) return [];
-    return reconstruirHallazgosAlMomento(cambios, momento);
-  }, [cambios, ultimoCheckpoint, momento]);
-
-  const notasReconstruidas = useMemo(() => {
-    if (!cambios || !ultimoCheckpoint) return [];
-    return reconstruirNotasAlMomento(cambios, momento);
-  }, [cambios, ultimoCheckpoint, momento]);
+  // Cada dentición se reconstruye con SUS checkpoints (justo antes del último guardado de
+  // esa dentición: el `registradoEn` del checkpoint anterior, o "" — vacío — si el último es
+  // el único) y el resultado se une para el diagrama unificado.
+  const reconstruido = useMemo(() => {
+    const hallazgos: HallazgoDental[] = [];
+    const notas: NotaDental[] = [];
+    let ultimoCheckpoint: CambioOdontograma | null = null;
+    for (const id of odontogramaIds) {
+      const propios = (cambios ?? []).filter((c) => c.odontogramaId === id);
+      const checkpoints = propios.filter((c) => c.tipoCambio === "CHECKPOINT");
+      if (!checkpoints[0]) continue;
+      const momento = checkpoints[1]?.registradoEn ?? "";
+      hallazgos.push(...reconstruirHallazgosAlMomento(propios, momento));
+      notas.push(...reconstruirNotasAlMomento(propios, momento));
+      if (!ultimoCheckpoint || checkpoints[0].registradoEn > ultimoCheckpoint.registradoEn) {
+        ultimoCheckpoint = checkpoints[0];
+      }
+    }
+    return { hallazgos, notas, ultimoCheckpoint };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cambios, claveIds]);
+  const { ultimoCheckpoint } = reconstruido;
+  const hallazgosReconstruidos = reconstruido.hallazgos;
+  const notasReconstruidas = reconstruido.notas;
 
   const hallazgosSeleccion = useMemo(() => {
     if (!seleccion) return [];
@@ -179,8 +184,7 @@ export function HistorialOdontogramaTab({
       </div>
 
       <DiagramaBoca
-        dientesSuperior={dientesSuperior}
-        dientesInferior={dientesInferior}
+        filas={filas}
         hallazgos={hallazgosReconstruidos}
         seleccion={seleccion}
         onClickDiente={(diente) => setSeleccion({ diente, superficie: null })}

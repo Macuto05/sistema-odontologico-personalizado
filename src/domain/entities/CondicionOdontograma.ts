@@ -696,3 +696,10 @@ export const DIENTES_NINO = [...DIENTES_NINO_SUPERIOR, ...DIENTES_NINO_INFERIOR]
 export function dientesParaDenticion(denticion: Denticion): string[] {
   return denticion === "ADULTO" ? DIENTES_ADULTO : DIENTES_NINO;
 }
+
+/** Dentición a la que pertenece un número FDI — los números nunca se repiten entre ambas
+ * (11–48 adulto, 51–85 niño), así que el odontograma unificado (adulto arriba/abajo, niño en
+ * el medio) puede saber a qué Odontograma va cada clic solo por el número del diente. */
+export function denticionDeDiente(diente: string): Denticion {
+  return DIENTES_NINO.includes(diente) ? "NINO" : "ADULTO";
+}

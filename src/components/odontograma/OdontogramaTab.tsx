@@ -27,8 +27,10 @@ import {
   DIENTES_NINO_INFERIOR,
   DIENTES_NINO_SUPERIOR,
   buscarCondicion,
+  denticionDeDiente,
 } from "@/domain/entities/CondicionOdontograma";
-import { DiagramaBoca, SeleccionDiente } from "./DiagramaBoca";
+import { DiagramaBoca, FilaDiagrama, SeleccionDiente } from "./DiagramaBoca";
+import { calcularEdad } from "@/components/pacientes/formatearFecha";
 import { PanelHerramientas } from "./PanelHerramientas";
 import { LeyendaOdontograma } from "./LeyendaOdontograma";
 import { HistorialOdontogramaTab } from "./HistorialOdontogramaTab";
@@ -91,6 +93,7 @@ const TABS_VISTA: TabOption<VistaOdontograma>[] = [
 ];
 
 interface SnapshotDeshacer {
+  denticion: Denticion;
   hallazgos: HallazgoDental[];
   notas: NotaDental[];
   descripcion: string;
@@ -145,8 +148,16 @@ export function OdontogramaTab({
   const soloLectura = soloLecturaForzado ?? !puedeEditarse(paciente);
 
   const [vista, setVista] = useState<VistaOdontograma>("actual");
-  const [denticion, setDenticion] = useState<Denticion>("ADULTO");
   const [seleccion, setSeleccion] = useState<SeleccionDiente | null>(null);
+  // Odontograma unificado (feedback de la odontóloga, con el odontograma clásico de
+  // referencia): ya no hay pestañas Adulto/Niño — se ven ambas denticiones a la vez y la
+  // dentición "activa" es la del diente seleccionado (los números FDI no se repiten entre
+  // ambas). Siguen siendo dos Odontogramas separados en la base: cada acción va al que
+  // corresponde, sin migración de datos.
+  const denticion: Denticion = seleccion ? denticionDeDiente(seleccion.diente) : "ADULTO";
+  // null = automático (según edad y si ya hay datos de niño); true/false = lo eligió la
+  // odontóloga con el botón "Mostrar/Ocultar dientes de niño".
+  const [mostrarNinoManual, setMostrarNinoManual] = useState<boolean | null>(null);
   const [pendienteMultiDiente, setPendienteMultiDiente] = useState<PendienteMultiDiente | null>(
     null,
   );
@@ -213,8 +224,7 @@ export function OdontogramaTab({
     ADULTO: odontogramaAdulto,
     NINO: odontogramaNino,
   };
-  const odontograma = odontogramasGuardados[denticion];
-  const cargando = (denticion === "ADULTO" ? resultadoAdulto : resultadoNino) === CARGANDO;
+  const cargando = resultadoAdulto === CARGANDO || resultadoNino === CARGANDO;
 
   const itemsPlanGuardados = useLiveQuery(async () => {
     const todos = await db.itemsPlanTratamiento.where("pacienteId").equals(pacienteId).toArray();
@@ -280,16 +290,6 @@ export function OdontogramaTab({
     setErrorMultiDiente(null);
   }
 
-  // Cambiar de dentición invalida la selección/pila de deshacer en curso (mismo criterio
-  // que antes de este cambio) — pero NO el borrador de datos: ese vive en `borradores`,
-  // indexado por dentición, y sobrevive al cambio de vista.
-  useEffect(() => {
-    setSeleccion(null);
-    setPendienteMultiDiente(null);
-    setPilaDeshacer([]);
-    setPilaRehacer([]);
-  }, [denticion]);
-
   // Cambiar de paciente sí descarta todo — son borradores de otra persona.
   useEffect(() => {
     setSeleccion(null);
@@ -307,17 +307,53 @@ export function OdontogramaTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soloLectura]);
 
-  const dientesSuperior = denticion === "ADULTO" ? DIENTES_ADULTO_SUPERIOR : DIENTES_NINO_SUPERIOR;
-  const dientesInferior = denticion === "ADULTO" ? DIENTES_ADULTO_INFERIOR : DIENTES_NINO_INFERIOR;
+  // Un paciente sin odontograma de una dentición simplemente no tiene hallazgos en ella: en
+  // solo lectura (ficha del paciente, sin "Editar") no se crea ninguno, así que antes el
+  // borrador quedaba null para siempre y la pantalla se clavaba en "Cargando…" (reportado por
+  // la odontóloga). Una vez resuelta la consulta local y el intento de traerlo del servidor,
+  // esa dentición se muestra vacía.
+  function borradorVisible(d: Denticion): BorradorOdontograma | null {
+    return (
+      borradores[d] ??
+      (soloLectura && !cargando && !odontogramasGuardados[d] && listoParaMostrar
+        ? BORRADOR_VACIO
+        : null)
+    );
+  }
+  const borradorAdulto = borradorVisible("ADULTO");
+  const borradorNino = borradorVisible("NINO");
+  // Borrador de la dentición del diente seleccionado — sobre el que actúan las acciones.
+  const borrador = denticion === "ADULTO" ? borradorAdulto : borradorNino;
+  const listoDiagrama = !cargando && borradorAdulto !== null && borradorNino !== null;
 
-  // Un paciente sin odontograma de esta dentición simplemente no tiene hallazgos: en solo
-  // lectura (ficha del paciente, sin "Editar") no se crea ninguno, así que antes `borrador`
-  // quedaba null para siempre y la pantalla se clavaba en "Cargando…" (reportado por la
-  // odontóloga). Una vez resuelta la consulta local y el intento de traerlo del servidor, se
-  // muestra el diagrama vacío.
-  const borrador =
-    borradores[denticion] ??
-    (soloLectura && !cargando && !odontograma && listoParaMostrar ? BORRADOR_VACIO : null);
+  // Filas de niño: visibles por defecto en menores de 13 años (dentición temporal o mixta) o
+  // si ya hay algo marcado en dientes de niño; ocultas en adultos sin datos de niño, para no
+  // llenar el diagrama de 20 dientes vacíos (decisión acordada con la odontóloga).
+  const tieneDatosNino =
+    (borradorNino?.hallazgos.length ?? 0) > 0 || (borradorNino?.notas.length ?? 0) > 0;
+  const mostrarNino = mostrarNinoManual ?? (calcularEdad(paciente.fechaNacimiento) < 13 || tieneDatosNino);
+  const filas: FilaDiagrama[] = [
+    { dientes: DIENTES_ADULTO_SUPERIOR, inferior: false },
+    ...(mostrarNino
+      ? [
+          { dientes: DIENTES_NINO_SUPERIOR, inferior: false },
+          { dientes: DIENTES_NINO_INFERIOR, inferior: true },
+        ]
+      : []),
+    { dientes: DIENTES_ADULTO_INFERIOR, inferior: !mostrarNino },
+  ];
+
+  function alternarDientesNino() {
+    const nuevo = !mostrarNino;
+    setMostrarNinoManual(nuevo);
+    // Ocultar las filas de niño con un diente de niño seleccionado dejaría un panel apuntando
+    // a algo que ya no se ve.
+    if (!nuevo && seleccion && denticionDeDiente(seleccion.diente) === "NINO") {
+      setSeleccion(null);
+      setPendienteMultiDiente(null);
+      setErrorMultiDiente(null);
+    }
+  }
 
   function hallazgosEnContexto(ctx: SeleccionDiente | null): HallazgoDental[] {
     if (!ctx || !borrador) return [];
@@ -353,18 +389,19 @@ export function OdontogramaTab({
 
   /** Guarda el estado actual del borrador (de la dentición activa) en la pila de deshacer
    * antes de una edición local — una acción manual nueva siempre invalida cualquier
-   * rehacer pendiente. */
+   * rehacer pendiente. El snapshot recuerda su dentición: con el odontograma unificado, una
+   * sola pila deshace en el orden real en que se marcó, sea en dientes de adulto o de niño. */
   function registrarSnapshotAntesDeEditar(descripcion: string) {
     if (!borrador) return;
     setPilaDeshacer((pila) => [
       ...pila,
-      { hallazgos: borrador.hallazgos, notas: borrador.notas, descripcion },
+      { denticion, hallazgos: borrador.hallazgos, notas: borrador.notas, descripcion },
     ]);
     setPilaRehacer([]);
   }
 
   function alClicDienteOSuperficie(diente: string, superficie: SeleccionDiente["superficie"]) {
-    if (!odontograma || soloLectura) return;
+    if (!odontogramasGuardados[denticionDeDiente(diente)] || soloLectura) return;
 
     if (pendienteMultiDiente) {
       completarMultiDiente(diente);
@@ -401,18 +438,30 @@ export function OdontogramaTab({
     setErrorMultiDiente(null);
   }
 
-  /** Arcada (array FDI en orden de pantalla) a la que pertenece un diente, o null si no
-   * aparece en ninguna de las dos de la dentición activa. */
+  /** Arcada (fila del diagrama, array FDI en orden de pantalla) a la que pertenece un diente.
+   * Con el odontograma unificado cada fila es una arcada de UNA dentición, así que un tramo
+   * nunca puede mezclar dientes de adulto y de niño (ej. un puente del 15 al 55). */
   function arcadaDe(diente: string): string[] | null {
-    if (dientesSuperior.includes(diente)) return dientesSuperior;
-    if (dientesInferior.includes(diente)) return dientesInferior;
-    return null;
+    return (
+      [DIENTES_ADULTO_SUPERIOR, DIENTES_NINO_SUPERIOR, DIENTES_NINO_INFERIOR, DIENTES_ADULTO_INFERIOR].find(
+        (a) => a.includes(diente),
+      ) ?? null
+    );
   }
 
   function completarMultiDiente(segundoDiente: string) {
     if (!pendienteMultiDiente || !seleccion || !borrador) return;
     const condicion = buscarCondicion(pendienteMultiDiente.condicionId);
     let dientes = [seleccion.diente, segundoDiente];
+
+    // Cada hallazgo vive en el Odontograma de UNA dentición — un par adulto+niño no tendría
+    // dónde guardarse de forma coherente.
+    if (denticionDeDiente(segundoDiente) !== denticion) {
+      setErrorMultiDiente(
+        denticion === "ADULTO" ? "Elige otro diente de adulto." : "Elige otro diente de niño.",
+      );
+      return;
+    }
 
     if (condicion?.estiloMultiDiente === "TRAMO" || condicion?.estiloMultiDiente === "RANGO") {
       const arcada = arcadaDe(seleccion.diente);
@@ -491,32 +540,42 @@ export function OdontogramaTab({
     }));
   }
 
+  // Deshacer/Rehacer restauran la dentición que guarda cada snapshot (no la del diente
+  // seleccionado ahora): una sola pila para todo el odontograma unificado.
   function onDeshacer() {
-    if (!borrador) return;
     const objetivo = pilaDeshacer[pilaDeshacer.length - 1];
-    if (!objetivo) return;
+    const borradorObjetivo = objetivo ? borradores[objetivo.denticion] : null;
+    if (!objetivo || !borradorObjetivo) return;
     const actual: SnapshotDeshacer = {
-      hallazgos: borrador.hallazgos,
-      notas: borrador.notas,
+      denticion: objetivo.denticion,
+      hallazgos: borradorObjetivo.hallazgos,
+      notas: borradorObjetivo.notas,
       descripcion: objetivo.descripcion,
     };
     setPilaDeshacer((pila) => pila.slice(0, -1));
     setPilaRehacer((pila) => [...pila, actual]);
-    setBorradores((act) => ({ ...act, [denticion]: { hallazgos: objetivo.hallazgos, notas: objetivo.notas } }));
+    setBorradores((act) => ({
+      ...act,
+      [objetivo.denticion]: { hallazgos: objetivo.hallazgos, notas: objetivo.notas },
+    }));
   }
 
   function onRehacer() {
-    if (!borrador) return;
     const objetivo = pilaRehacer[pilaRehacer.length - 1];
-    if (!objetivo) return;
+    const borradorObjetivo = objetivo ? borradores[objetivo.denticion] : null;
+    if (!objetivo || !borradorObjetivo) return;
     const actual: SnapshotDeshacer = {
-      hallazgos: borrador.hallazgos,
-      notas: borrador.notas,
+      denticion: objetivo.denticion,
+      hallazgos: borradorObjetivo.hallazgos,
+      notas: borradorObjetivo.notas,
       descripcion: objetivo.descripcion,
     };
     setPilaRehacer((pila) => pila.slice(0, -1));
     setPilaDeshacer((pila) => [...pila, actual]);
-    setBorradores((act) => ({ ...act, [denticion]: { hallazgos: objetivo.hallazgos, notas: objetivo.notas } }));
+    setBorradores((act) => ({
+      ...act,
+      [objetivo.denticion]: { hallazgos: objetivo.hallazgos, notas: objetivo.notas },
+    }));
   }
 
   // ---- Plan de tratamiento: mismas reglas de borrador, sin pila de deshacer propia ----
@@ -704,26 +763,15 @@ export function OdontogramaTab({
       </div>
 
       <div className={styles.encabezado}>
-        <div className={styles.tabsDenticion} role="tablist" aria-label="Dentición">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={denticion === "ADULTO"}
-            className={denticion === "ADULTO" ? styles.activo : styles.inactivo}
-            onClick={() => setDenticion("ADULTO")}
-          >
-            Adulto
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={denticion === "NINO"}
-            className={denticion === "NINO" ? styles.activo : styles.inactivo}
-            onClick={() => setDenticion("NINO")}
-          >
-            Niño
-          </button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={alternarDientesNino}
+          aria-pressed={mostrarNino}
+        >
+          {mostrarNino ? "Ocultar dientes de niño" : "Mostrar dientes de niño"}
+        </Button>
         {vista === "actual" && !soloLectura && (
           <div className={styles.accionesDeshacer}>
             <Button
@@ -774,13 +822,12 @@ export function OdontogramaTab({
               onCancelar={onCancelar}
               onAbrirLeyenda={() => setLeyendaAbierta(true)}
             />
-            {cargando || !borrador ? (
+            {!listoDiagrama ? (
               <p className="text-body-sm">Cargando…</p>
             ) : (
               <DiagramaBoca
-                dientesSuperior={dientesSuperior}
-                dientesInferior={dientesInferior}
-                hallazgos={borrador.hallazgos}
+                filas={filas}
+                hallazgos={[...(borradorAdulto?.hallazgos ?? []), ...(borradorNino?.hallazgos ?? [])]}
                 seleccion={seleccion}
                 onClickDiente={(diente) => alClicDienteOSuperficie(diente, null)}
                 onClickSuperficie={(diente, superficie) => alClicDienteOSuperficie(diente, superficie)}
@@ -798,9 +845,10 @@ export function OdontogramaTab({
         </>
       ) : (
         <HistorialOdontogramaTab
-          odontogramaId={odontograma?.id ?? null}
-          dientesSuperior={dientesSuperior}
-          dientesInferior={dientesInferior}
+          odontogramaIds={[odontogramaAdulto?.id, odontogramaNino?.id].filter(
+            (id): id is string => !!id,
+          )}
+          filas={filas}
         />
       )}
 
