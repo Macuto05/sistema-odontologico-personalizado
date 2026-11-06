@@ -38,7 +38,50 @@ export async function obtenerLotePendiente(maxSize = 20): Promise<OutboxOperatio
 }
 
 export async function marcarEnviando(ids: string[]): Promise<void> {
-  await db.outboxOperations.where("id").anyOf(ids).modify({ estado: "ENVIANDO" });
+  await db.outboxOperations
+    .where("id")
+    .anyOf(ids)
+    .modify({ estado: "ENVIANDO", enviandoDesde: new Date().toISOString() });
+}
+
+/**
+ * Pasado este tiempo, una operación en `ENVIANDO` se da por huérfana. Es mayor que el
+ * timeout del POST de sync (syncEngine.ts), así que un envío que todavía está en vuelo
+ * nunca se toma por huérfano.
+ */
+export const ANTIGUEDAD_ENVIO_HUERFANO_MS = 2 * 60_000;
+
+/** Un envío quedó huérfano si nadie va a resolverlo: lleva más de `umbralMs` en `ENVIANDO`
+ * o no tiene marca de cuándo empezó (marcado antes de que existiera `enviandoDesde`). */
+export function esEnvioHuerfano(
+  op: Pick<OutboxOperation, "estado" | "enviandoDesde">,
+  ahora: number,
+  umbralMs = ANTIGUEDAD_ENVIO_HUERFANO_MS,
+): boolean {
+  if (op.estado !== "ENVIANDO") return false;
+  if (!op.enviandoDesde) return true;
+  const desde = Date.parse(op.enviandoDesde);
+  return Number.isNaN(desde) || ahora - desde > umbralMs;
+}
+
+/**
+ * Devuelve a `PENDIENTE` las operaciones que quedaron en `ENVIANDO` sin que nadie las
+ * resuelva. Pasa cuando el teléfono cierra o congela la app en medio de un envío (bloquear
+ * la pantalla, cambiar de app): `revertirAPendiente` nunca corre y, como el lote solo toma
+ * `PENDIENTE`, esas operaciones no se volvían a enviar NUNCA, aunque el indicador las seguía
+ * contando como "por sincronizar" (reportado: 3 cambios trabados por días en el teléfono de
+ * la odontóloga, el indicador alternando entre "Sincronizando" y "3 por sincronizar").
+ * Reenviarlas es seguro: el servidor es idempotente por `id` de operación.
+ */
+export async function recuperarEnviosHuerfanos(
+  umbralMs = ANTIGUEDAD_ENVIO_HUERFANO_MS,
+  ahora = Date.now(),
+): Promise<number> {
+  return db.outboxOperations
+    .where("estado")
+    .equals("ENVIANDO" satisfies EstadoOutbox)
+    .and((op) => esEnvioHuerfano(op, ahora, umbralMs))
+    .modify({ estado: "PENDIENTE" });
 }
 
 /** Sincronizada con éxito: se elimina del outbox, ya cumplió su función. */

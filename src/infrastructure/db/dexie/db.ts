@@ -41,6 +41,10 @@ export interface OutboxOperation {
   baseVersion?: number;
   estado: EstadoOutbox;
   createdAt: string;
+  /** Cuándo pasó a `ENVIANDO` (ISO). Sin esto no hay forma de saber si un envío quedó
+   * huérfano — ver `recuperarEnviosHuerfanos` en outboxQueue.ts. Ausente en operaciones
+   * marcadas antes de que existiera el campo (también se tratan como huérfanas). */
+  enviandoDesde?: string;
 }
 
 /**

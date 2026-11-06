@@ -25,7 +25,7 @@ describe("fusionarContenidoDuplicado", () => {
       { hallazgos: [h("x", "18", "ABSCESO")], notas: [] },
     );
     expect(r.hallazgos).toHaveLength(1);
-    expect(r.hallazgos[0].condicionId).toBe("CARIES");
+    expect(r.hallazgos[0]?.condicionId).toBe("CARIES");
   });
 
   it("notas en el mismo diente: queda la más reciente; en dientes distintos, ambas", () => {
@@ -64,7 +64,7 @@ describe("rebasarBorrador", () => {
     const borrador = { hallazgos: [editado], notas: base.notas }; // "a" eliminado, "b" editado
     const r = rebasarBorrador(base, borrador, base);
     expect(ids(r.hallazgos)).toEqual(["b"]);
-    expect(r.hallazgos[0].estadoColor).toBe("REALIZADO");
+    expect(r.hallazgos[0]?.estadoColor).toBe("REALIZADO");
   });
 
   it("notas: conserva la editada y la borrada en el borrador sigue borrada", () => {

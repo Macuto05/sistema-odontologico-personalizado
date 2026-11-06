@@ -16,7 +16,9 @@ import {
   marcarConflicto,
   marcarEnviando,
   marcarSincronizadaYLimpiar,
+  ANTIGUEDAD_ENVIO_HUERFANO_MS,
   obtenerLotePendiente,
+  recuperarEnviosHuerfanos,
   revertirAPendiente,
 } from "./outboxQueue";
 import { finalizarCiclo, iniciarPush, marcarEnviadas, pasarAPull } from "./syncStatus";
@@ -33,6 +35,11 @@ import { Insumo } from "@/domain/entities/Insumo";
 const LOTE_PULL = 200;
 
 const INTERVALO_REINTENTO_MS = 30_000;
+
+/** Tope del POST de sync. Sin él, un request colgado (red móvil que se cae sin cerrar la
+ * conexión) dejaba `cicloEnCurso` en true para siempre y el motor no volvía a sincronizar
+ * hasta recargar. Menor que `ANTIGUEDAD_ENVIO_HUERFANO_MS` (outboxQueue.ts). */
+const TIMEOUT_PUSH_MS = 60_000;
 
 interface ResultadoSyncApi {
   id: string;
@@ -67,9 +74,12 @@ export async function sincronizarLote(): Promise<number> {
   const ids = lote.map((op) => op.id);
   await marcarEnviando(ids);
 
+  const control = new AbortController();
+  const temporizador = setTimeout(() => control.abort(), TIMEOUT_PUSH_MS);
   try {
     const respuesta = await fetch("/api/sync", {
       method: "POST",
+      signal: control.signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         operaciones: lote.map((op) => ({
@@ -124,9 +134,11 @@ export async function sincronizarLote(): Promise<number> {
 
     return resultados.length;
   } catch {
-    // Sin conexión o error de red a mitad de camino — se reintenta en el próximo ciclo.
+    // Sin conexión, timeout o error de red a mitad de camino — se reintenta en el próximo ciclo.
     await revertirAPendiente(ids);
     return 0;
+  } finally {
+    clearTimeout(temporizador);
   }
 }
 
@@ -659,6 +671,10 @@ let cicloEnCurso = false;
  */
 let cicloPendiente = false;
 
+/** true hasta que corre el primer ciclo desde que se cargó la app (módulo recién evaluado);
+ * la navegación interna no lo reinicia, una recarga completa sí. */
+let primerCicloDeEstaCarga = true;
+
 async function ejecutarCicloDeSync(): Promise<void> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return;
   if (cicloEnCurso) {
@@ -668,6 +684,16 @@ async function ejecutarCicloDeSync(): Promise<void> {
 
   cicloEnCurso = true;
   try {
+    // Envíos que quedaron a medias (la app se cerró, se recargó o se congeló en pleno POST)
+    // vuelven a la cola antes de contar — si no, el indicador los contaba como pendientes
+    // pero nunca se reenviaban (ver `recuperarEnviosHuerfanos`). En el primer ciclo de esta
+    // carga de la app ningún envío propio puede estar en vuelo todavía, así que todo
+    // `ENVIANDO` es de una sesión anterior y se recupera ya; después, solo los que pasaron
+    // el umbral (un envío reciente puede seguir en vuelo). Reenviar de más es inocuo: el
+    // servidor es idempotente por id de operación.
+    await recuperarEnviosHuerfanos(primerCicloDeEstaCarga ? 0 : ANTIGUEDAD_ENVIO_HUERFANO_MS);
+    primerCicloDeEstaCarga = false;
+
     // Push: vaciar la cola de pendientes (en lotes, mezclando Paciente, Consultorio y Cita)
     // antes de traer del servidor.
     const totalPendientes = await contarOperacionesPendientes();
